@@ -17,13 +17,14 @@ products = {}
 stores = {}
 store_products = {}
 
-# TODO: Request till www.systembolaget.se/dryck/ol/'-'.join(product['namn'].split())-<product['nr']>
+# TODO: Request till www.systembolaget.se/dryck/varugrupp.split(',')[0].replace('ö', o).replace('ä|å',a)/'-'.join(product['namn'].split())-<product['nr']>
 # Hitta div med id = product-image-carousel
 # Hitta img, plocka ut src
+# Hitta div med class = description, plocka ut description
 
-def make_public(thing, url):
+def make_public(thing, url, key):
     new_thing = dict(thing)
-    new_thing['uri'] = '%s/%s' % (url, thing['nr'])
+    new_thing['uri'] = '%s/%s' % (url, thing[key])
     return new_thing
 
 def get_resources():
@@ -41,10 +42,11 @@ def lower_keys(x):
 		return x
 
 def preprocess_products(temp_products):
-	return {'artikel' : [make_public(product, '/systembolagetapi/api/artikel') for product in temp_products['artikel']]}
+	#for product in temp_products:
+	return {'artikel' : [make_public(product, '/systembolagetapi/api/artikel', 'varnummer') for product in temp_products['artikel']]}
 
 def preprocess_stores(temp_stores):
-	return {'butik' : [make_public(store, '/systembolagetapi/api/butik') for store in temp_stores['butikombud']]}
+	return {'butik' : [make_public(store, '/systembolagetapi/api/butik', 'nr') for store in temp_stores['butikombud']]}
 
 def preprocess_store_products(temp_store_products):
 	return {'lager' : temp_store_products['butik']}
