@@ -12,7 +12,7 @@ STORE_PRODUCT_URL = 'http://www.systembolaget.se/api/assortment/stock/xml'
 BOTTLE = '03'
 CAN = '12'
 
-products = {}
+articles = {}
 stores = {}
 store_products = {}
 suffix_set = set()
@@ -41,11 +41,11 @@ def lower_keys(x):
 
 
 def preprocess_products(temp_products):
-    return {'article': map(preprocess_article, temp_products['artikel'])}
+    return {'articles': map(preprocess_article, temp_products['artikel'])}
 
 
 def preprocess_stores(temp_stores):
-    return {'store': map(preprocess_store, temp_stores['butikombud'])}
+    return {'stores': map(preprocess_store, temp_stores['butikombud'])}
 
 
 def preprocess_article(article):
@@ -116,28 +116,28 @@ def get_resource_to_json(url):
     return xmldict
 
 
-@app.route('/systembolaget/api/article', methods=['GET'])
+@app.route('/systembolaget/api/articles', methods=['GET'])
 def get_products():
-    return jsonify(products)
+    return jsonify(articles)
 
 
-@app.route('/systembolaget/api/article/<string:article_number>', methods=['GET'])
+@app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
 def get_product(article_number):
-    articles = [article for article in article['article'] if article['article_id'] == article_number]
-    if len(articles) == 0:
+    matching_articles = [article for article in articles['article'] if article['article_id'] == article_number]
+    if len(matching_articles) == 0:
         # Try again with the article number instead of ID
-        articles = [article for article in article['article'] if article['article_number'] == article_number]
-        if len(articles) == 0:
+        matching_articles = [article for article in articles['article'] if article['article_number'] == article_number]
+        if len(matching_articles) == 0:
             abort(404)
-    return jsonify({'article': articles[0]})
+    return jsonify({'article': matching_articles[0]})
 
 
-@app.route('/systembolaget/api/store', methods=['GET'])
+@app.route('/systembolaget/api/stores', methods=['GET'])
 def get_stores():
     return jsonify(stores)
 
 
-@app.route('/systembolaget/api/store/<string:store_id>', methods=['GET'])
+@app.route('/systembolaget/api/stores/<string:store_id>', methods=['GET'])
 def get_store(store_id):
     store = [store for store in stores['store'] if store['store_id'] == store_id]
     if len(store) == 0:
@@ -181,5 +181,5 @@ def not_found(error):
 
 
 if __name__ == '__main__':
-    products, stores, store_products, suffix_set = get_resources()
+    articles, stores, store_products, suffix_set = get_resources()
     app.run()
