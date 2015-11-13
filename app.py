@@ -12,9 +12,9 @@ STORE_PRODUCT_URL = 'http://www.systembolaget.se/api/assortment/stock/xml'
 BOTTLE = '03'
 CAN = '12'
 
-articles = {}
-stores = {}
-store_products = {}
+articles = []
+stores = []
+stock = []
 suffix_set = set()
 
 
@@ -41,11 +41,20 @@ def lower_keys(x):
 
 
 def preprocess_products(temp_products):
-    return {'articles': map(preprocess_article, temp_products['artikel'])}
+    return map(preprocess_article, temp_products['artikel'])
 
 
 def preprocess_stores(temp_stores):
-    return {'stores': map(preprocess_store, temp_stores['butikombud'])}
+    return map(preprocess_store, temp_stores['butikombud'])
+
+
+def preprocess_store_products(temp_store_products):
+    temp_suffix_set = set()
+    for store in temp_store_products['butik']:
+        for artikelnr in store['artikelnr']:
+            temp_suffix_set.add(artikelnr[-2:])
+    return [{'article_number': store['artikelnr'], 'store_id': store['butiknr']} for store in
+            temp_store_products['butik']], temp_suffix_set
 
 
 def preprocess_article(article):
@@ -100,15 +109,6 @@ def preprocess_store(store):
     }
 
 
-def preprocess_store_products(temp_store_products):
-    temp_suffix_set = set()
-    for store in temp_store_products['butik']:
-        for artikelnr in store['artikelnr']:
-            temp_suffix_set.add(artikelnr[-2:])
-    return {'stock': [{'article_number': store['artikelnr'], 'store_id': store['butiknr']} for store in
-                      temp_store_products['butik']]}, temp_suffix_set
-
-
 def get_resource_to_json(url):
     r = requests.get(url)
     root = ElementTree.fromstring(r.text.encode('utf-8'))
@@ -118,41 +118,41 @@ def get_resource_to_json(url):
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
 def get_products():
-    return jsonify(articles)
+    return jsonify({'articles': articles})
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
 def get_product(article_number):
-    matching_articles = [article for article in articles['article'] if article['article_id'] == article_number]
+    matching_articles = [article for article in articles if article['article_id'] == article_number]
     if not matching_articles:
         # Try again with the article number instead of ID
-        matching_articles = [article for article in articles['article'] if article['article_number'] == article_number]
+        matching_articles = [article for article in articles if article['article_number'] == article_number]
         if not matching_articles:
             abort(404)
-    return jsonify({'article': matching_articles[0]})
+    return jsonify(matching_articles[0])
 
 
 @app.route('/systembolaget/api/stores', methods=['GET'])
 def get_stores():
-    return jsonify(stores)
+    return jsonify({'stores': stores})
 
 
 @app.route('/systembolaget/api/stores/<string:store_id>', methods=['GET'])
 def get_store(store_id):
-    store = [store for store in stores['store'] if store['store_id'] == store_id]
+    store = [store for store in stores if store['store_id'] == store_id]
     if not store:
         abort(404)
-    return jsonify({'store': store[0]})
+    return jsonify(store[0])
 
 
 @app.route('/systembolaget/api/stock/', methods=['GET'])
 def get_stock():
-    return jsonify(store_products)
+    return jsonify({'stock: ': stock})
 
 
 @app.route('/systembolaget/api/stock/store/<string:store_id>', methods=['GET'])
 def get_store_stock(store_id):
-    stock_list = [store for store in store_products['stock'] if store['store_id'] == store_id]
+    stock_list = [store for store in stock if store['store_id'] == store_id]
     if not stock_list:
         abort(404)
     return jsonify({'stock': stock_list})
@@ -161,13 +161,13 @@ def get_store_stock(store_id):
 @app.route('/systembolaget/api/stock/article/<string:product_id>', methods=['GET'])
 def get_product_stores(product_id):
     store_list = []
-    for store in store_products['stock']:
+    for store in stock:
         if product_id in store['article_id']:
             store_list.append(store['store_id'])
     if not store_list:
         # Search with all suffixes in suffix set, user put in the article ID, not a specific article number
         for suffix in suffix_set:
-            for store in store_products['stock']:
+            for store in stock:
                 if product_id + suffix in store['article_id']:
                     store_list.append(store['store_id'])
         if not store_list:
@@ -181,5 +181,5 @@ def not_found(error):
 
 
 if __name__ == '__main__':
-    articles, stores, store_products, suffix_set = get_resources()
+    articles, stores, stock, suffix_set = get_resources()
     app.run()
