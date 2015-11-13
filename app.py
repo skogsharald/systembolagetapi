@@ -18,11 +18,6 @@ stock = []
 suffix_set = set()
 
 
-# TODO: Request till www.systembolaget.se/dryck/varugrupp.split(',')[0].replace('ö', o).replace('ä|å',a)/'-'.join(product['namn'].split())-<product['nr']>
-# Hitta div med id = product-image-carousel
-# Hitta img, plocka ut src
-# Hitta div med class = description, plocka ut description
-
 def get_resources():
     temp_products = preprocess_products(lower_keys(get_resource_to_json(PRODUCT_URL)))
     temp_stores = preprocess_stores(lower_keys(get_resource_to_json(STORE_URL)))
