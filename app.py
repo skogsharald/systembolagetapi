@@ -43,6 +43,7 @@ def lower_keys(x):
 def preprocess_products(temp_products):
     return {'article': map(preprocess_article, temp_products['artikel'])}
 
+
 def preprocess_stores(temp_stores):
     return {'store': map(preprocess_store, temp_stores['butikombud'])}
 
