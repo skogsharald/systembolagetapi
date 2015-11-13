@@ -124,10 +124,10 @@ def get_products():
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
 def get_product(article_number):
     matching_articles = [article for article in articles['article'] if article['article_id'] == article_number]
-    if len(matching_articles) == 0:
+    if not matching_articles:
         # Try again with the article number instead of ID
         matching_articles = [article for article in articles['article'] if article['article_number'] == article_number]
-        if len(matching_articles) == 0:
+        if not matching_articles:
             abort(404)
     return jsonify({'article': matching_articles[0]})
 
@@ -140,7 +140,7 @@ def get_stores():
 @app.route('/systembolaget/api/stores/<string:store_id>', methods=['GET'])
 def get_store(store_id):
     store = [store for store in stores['store'] if store['store_id'] == store_id]
-    if len(store) == 0:
+    if not store:
         abort(404)
     return jsonify({'store': store[0]})
 
@@ -153,7 +153,7 @@ def get_stock():
 @app.route('/systembolaget/api/stock/store/<string:store_id>', methods=['GET'])
 def get_store_stock(store_id):
     stock_list = [store for store in store_products['stock'] if store['store_id'] == store_id]
-    if len(stock_list) == 0:
+    if not stock_list:
         abort(404)
     return jsonify({'stock': stock_list})
 
@@ -164,13 +164,13 @@ def get_product_stores(product_id):
     for store in store_products['stock']:
         if product_id in store['article_id']:
             store_list.append(store['store_id'])
-    if len(store_list) == 0:
+    if not store_list:
         # Search with all suffixes in suffix set, user put in the article ID, not a specific article number
         for suffix in suffix_set:
             for store in store_products['stock']:
                 if product_id + suffix in store['article_id']:
                     store_list.append(store['store_id'])
-        if len(store_list) == 0:
+        if not store_list:
             abort(404)
     return jsonify({'stock': {'store_id': store_list}})
 
