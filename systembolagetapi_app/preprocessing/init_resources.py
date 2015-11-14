@@ -1,8 +1,11 @@
 from xml.etree import ElementTree
-from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL
 
+import re
 import requests
+from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL
 from xmldictconfig import XmlDictConfig
+
+hours_string_pattern = re.compile('\d{4}-\d{2}-\d{2};\d{2}:\d{2};\d{2}:\d{2}')
 
 
 def get_resources():
@@ -80,7 +83,7 @@ def preprocess_store(store):
         'store_type': store.get('butikstyp'),
         'name': store.get('namn'),
         'store_id': store.get('nr'),
-        'hours_open': store.get('oppettider'),
+        'hours_open': preprocess_hours_open(store.get('oppettider')),
         'rt90x': store.get('rt90x'),
         'rt90y': store.get('rt90y'),
         'search_words': store.get('sokord'),
@@ -89,6 +92,18 @@ def preprocess_store(store):
         'type': store.get('typ'),
         'uri': '/systembolaget/api/store/%s' % store.get('nr'),
     }
+
+
+def preprocess_hours_open(hours_open):
+    if not hours_open:
+        return None
+
+    hours_strings = hours_string_pattern.findall(hours_open)
+    hours_open_by_day = []
+    for hours_string in hours_strings:
+        date, start, end = hours_string.split(';')
+        hours_open_by_day.append({'date': date, 'start': start, 'end': end})
+    return hours_open_by_day
 
 
 def get_resource_to_json(url):
