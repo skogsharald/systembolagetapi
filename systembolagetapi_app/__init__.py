@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 BOTTLE = '03'
 CAN = '12'
-articles, stores, stock, suffix_set = get_resources()
+sb_articles, sb_stores, sb_stock, suffix_set = get_resources()
 
 from systembolagetapi_app.routes.resources import articles, stores, stock
 from systembolagetapi_app.routes.handlers import errors
