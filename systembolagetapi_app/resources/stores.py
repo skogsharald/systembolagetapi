@@ -1,6 +1,5 @@
 from systembolagetapi_app import app, stores
-from flask import jsonify
-from werkzeug.exceptions import abort
+from flask import jsonify, abort
 
 
 @app.route('/systembolaget/api/stores', methods=['GET'])
