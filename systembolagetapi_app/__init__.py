@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, jsonify, make_response
-from init_resources import get_resources
+from systembolagetapi_app.preprocessing.init_resources import get_resources
 
 app = Flask(__name__)
 
