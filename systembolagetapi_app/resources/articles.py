@@ -4,7 +4,6 @@ from flask import jsonify, abort
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
 def get_products():
-    print len(articles)
     return jsonify({'articles': articles})
 
 
