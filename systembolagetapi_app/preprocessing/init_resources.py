@@ -1,21 +1,11 @@
-# -*- coding: utf-8 -*-
-from flask import Flask, jsonify, abort, make_response, url_for
-from xmldictconfig import XmlDictConfig
 from xml.etree import ElementTree
-import requests
 
-app = Flask(__name__)
+import requests
+from xmldictconfig import XmlDictConfig
 
 PRODUCT_URL = 'http://www.systembolaget.se/api/assortment/products/xml'
 STORE_URL = 'http://www.systembolaget.se/api/assortment/stores/xml'
 STORE_PRODUCT_URL = 'http://www.systembolaget.se/api/assortment/stock/xml'
-BOTTLE = '03'
-CAN = '12'
-
-articles = []
-stores = []
-stock = []
-suffix_set = set()
 
 
 def get_resources():
@@ -109,72 +99,3 @@ def get_resource_to_json(url):
     root = ElementTree.fromstring(r.text.encode('utf-8'))
     xmldict = XmlDictConfig(root)
     return xmldict
-
-
-@app.route('/systembolaget/api/articles', methods=['GET'])
-def get_products():
-    return jsonify({'articles': articles})
-
-
-@app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
-def get_product(article_number):
-    matching_articles = [article for article in articles if article['article_id'] == article_number]
-    if not matching_articles:
-        # Try again with the article number instead of ID
-        matching_articles = [article for article in articles if article['article_number'] == article_number]
-        if not matching_articles:
-            abort(404)
-    return jsonify(matching_articles[0])
-
-
-@app.route('/systembolaget/api/stores', methods=['GET'])
-def get_stores():
-    return jsonify({'stores': stores})
-
-
-@app.route('/systembolaget/api/stores/<string:store_id>', methods=['GET'])
-def get_store(store_id):
-    store = [store for store in stores if store['store_id'] == store_id]
-    if not store:
-        abort(404)
-    return jsonify(store[0])
-
-
-@app.route('/systembolaget/api/stock/', methods=['GET'])
-def get_stock():
-    return jsonify({'stock: ': stock})
-
-
-@app.route('/systembolaget/api/stock/store/<string:store_id>', methods=['GET'])
-def get_store_stock(store_id):
-    stock_list = [store for store in stock if store['store_id'] == store_id]
-    if not stock_list:
-        abort(404)
-    return jsonify({'stock': stock_list})
-
-
-@app.route('/systembolaget/api/stock/article/<string:product_id>', methods=['GET'])
-def get_product_stores(product_id):
-    store_list = []
-    for store in stock:
-        if product_id in store['article_id']:
-            store_list.append(store['store_id'])
-    if not store_list:
-        # Search with all suffixes in suffix set, user put in the article ID, not a specific article number
-        for suffix in suffix_set:
-            for store in stock:
-                if product_id + suffix in store['article_id']:
-                    store_list.append(store['store_id'])
-        if not store_list:
-            abort(404)
-    return jsonify({'stock': {'store_id': store_list}})
-
-
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
-
-
-if __name__ == '__main__':
-    articles, stores, stock, suffix_set = get_resources()
-    app.run()
