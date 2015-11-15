@@ -43,6 +43,7 @@ def preprocess_store_products(temp_store_products):
 
 
 def preprocess_article(article):
+    department, article_type = preprocess_department(article.get('varugrupp'))
     return {
         'abv': article.get('alkoholhalt'),
         'year': article.get('argang'),
@@ -67,10 +68,18 @@ def preprocess_article(article):
         'origin': article.get('ursprung'),
         'origin_country': article.get('ursprunglandnamn'),
         'article_id': article.get('varnummer'),
-        'article_department': article.get('varugrupp'),
+        'article_department': department,
+        'type': article_type,
         'volume_ml': article.get('volymiml'),
         'recycle_value': article.get('pant')
     }
+
+
+def preprocess_department(article_department):
+    if article_department.count(',') == 1:
+        department, article_type = article_department.split(', ')
+        return department, article_type
+    return article_department, None
 
 
 def preprocess_store(store):
