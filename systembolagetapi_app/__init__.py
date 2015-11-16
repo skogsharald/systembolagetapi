@@ -4,6 +4,13 @@ from systembolagetapi_app.preprocessing.init_resources import get_resources
 
 app = Flask(__name__)
 
+
+@app.after_request
+def allow_cross_domain(response):
+    response.headers['Access-Control-Allow-Origin'] = "*"
+    return response
+
+
 BOTTLE = '03'
 CAN = '12'
 sb_articles, sb_stores, sb_stock, suffix_set = get_resources()
