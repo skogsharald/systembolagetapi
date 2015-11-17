@@ -9,7 +9,7 @@ def get_stores():
 
 @app.route('/systembolaget/api/stores/<string:store_id>', methods=['GET'])
 def get_store(store_id):
-    store = [store for store in sb_stores if store['store_id'] == store_id]
-    if not store:
+    matching_store = next((store for store in sb_stores if store['store_id'] == store_id), None)
+    if not matching_store:
         abort(404)
-    return jsonify(store[0])
+    return jsonify(matching_store)
