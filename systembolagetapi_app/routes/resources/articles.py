@@ -39,7 +39,7 @@ def get_product(article_number):
     return jsonify(matched_article)
 
 @app.route('/systembolaget/api/articles/departments', methods=['GET'])
-def get_department():
+def get_departments():
 	depts_set = set()
 	depts = []
 	for article in sb_articles:
