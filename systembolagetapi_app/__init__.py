@@ -3,13 +3,7 @@ from flask import Flask
 from systembolagetapi_app.preprocessing.init_resources import get_resources
 
 app = Flask(__name__)
-
-
-@app.after_request
-def allow_cross_domain(response):
-    response.headers['Access-Control-Allow-Origin'] = "*"
-    return response
-
+app.config
 
 BOTTLE = '03'
 CAN = '12'

@@ -1,8 +1,7 @@
 from xml.etree import ElementTree
-
 import re
 import requests
-from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL
+from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL, SB_ARTICLE_BASE_URL, ARTICLE_URI_KEY
 from xmldictconfig import XmlDictConfig
 
 hours_string_pattern = re.compile('\d{4}-\d{2}-\d{2};\d{2}:\d{2};\d{2}:\d{2}')
@@ -44,7 +43,7 @@ def preprocess_store_products(temp_store_products):
 
 def preprocess_article(article):
     department, article_type = preprocess_department(article.get('varugrupp'))
-    return {
+    temp_article = {
         'abv': article.get('alkoholhalt'),
         'year': article.get('argang'),
         'internal_article_id': article.get('artikelid'),
@@ -73,11 +72,16 @@ def preprocess_article(article):
         'volume_ml': article.get('volymiml'),
         'recycle_value': article.get('pant')
     }
+    temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
+                                              ARTICLE_URI_KEY[temp_article['article_department']],
+                                              '-'.join(temp_article['name'].replace('\'', '').lower().split()),
+                                              temp_article['article_number'])
+    return temp_article
 
 
 def preprocess_department(article_department):
-    if article_department.count(',') == 1:
-        department, article_type = article_department.split(', ')
+    if ', ' in article_department:
+        department, article_type = article_department.split(', ', 1)
         return department, article_type
     return article_department, None
 
