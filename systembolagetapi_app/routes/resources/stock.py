@@ -9,10 +9,10 @@ def get_stock():
 
 @app.route('/systembolaget/api/stock/store/<string:store_id>', methods=['GET'])
 def get_store_stock(store_id):
-    stock_list = [store for store in sb_stock if store['store_id'] == store_id]
-    if not stock_list:
+    matching_store = next((store for store in sb_stock if store['store_id'] == store_id), None)
+    if not matching_store:
         abort(404)
-    return jsonify({'stock': stock_list[0]})
+    return jsonify({'stock': matching_store})
 
 
 @app.route('/systembolaget/api/stock/article/<string:product_id>', methods=['GET'])
