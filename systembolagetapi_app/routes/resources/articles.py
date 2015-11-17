@@ -12,17 +12,17 @@ def get_products():
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
 def get_product(article_number):
-    matching_articles = [article for article in sb_articles if article['article_id'] == article_number]
-    if not matching_articles:
+    matching_article = next((article for article in sb_articles if article['article_id'] == article_number), None)
+    if not matching_article:
         # Try again with the article number instead of ID
-        matching_articles = [article for article in sb_articles if article['article_number'] == article_number]
-        if not matching_articles:
+        matching_article = next((article for article in sb_articles if article['article_number'] == article_number),
+                                None)
+        if not matching_article:
             abort(404)
-    matched_article = matching_articles[0]
     image_url = None
     description = None
     try:
-        r = requests.get(matched_article['sb_url'])
+        r = requests.get(matching_article['sb_url'])
         soup = BeautifulSoup(r.text, 'html.parser')
     except:
         pass
@@ -34,9 +34,9 @@ def get_product(article_number):
         img = soup.find(id='product-image-carousel')
         if img:
             image_url = 'http:%s' % img.find('img')['src']
-    matched_article['description'] = description
-    matched_article['image_url'] = image_url
-    return jsonify(matched_article)
+    matching_article['description'] = description
+    matching_article['image_url'] = image_url
+    return jsonify(matching_article)
 
 
 @app.route('/systembolaget/api/articles/departments', methods=['GET'])
