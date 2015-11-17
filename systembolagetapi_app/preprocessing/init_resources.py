@@ -1,5 +1,4 @@
 from xml.etree import ElementTree
-
 import re
 import requests
 from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL, SB_ARTICLE_BASE_URL, ARTICLE_URI_KEY
@@ -44,7 +43,7 @@ def preprocess_store_products(temp_store_products):
 
 def preprocess_article(article):
     department, article_type = preprocess_department(article.get('varugrupp'))
-    temp_article =  {
+    temp_article = {
         'abv': article.get('alkoholhalt'),
         'year': article.get('argang'),
         'internal_article_id': article.get('artikelid'),
@@ -73,12 +72,11 @@ def preprocess_article(article):
         'volume_ml': article.get('volymiml'),
         'recycle_value': article.get('pant')
     }
-    temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL, 
-        ARTICLE_URI_KEY[temp_article['article_department']], 
-        '-'.join(temp_article['name'].replace('\'', '').lower().split()), 
-        temp_article['article_number'])
+    temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
+                                              ARTICLE_URI_KEY[temp_article['article_department']],
+                                              '-'.join(temp_article['name'].replace('\'', '').lower().split()),
+                                              temp_article['article_number'])
     return temp_article
-
 
 
 def preprocess_department(article_department):
