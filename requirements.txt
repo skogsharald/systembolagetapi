@@ -1,14 +1,8 @@
 beautifulsoup4==4.4.1
-click==6.6
-Flask==0.11.1
+Flask==0.10.1
+Flask-Cache==0.13.1
 itsdangerous==0.24
 Jinja2==2.8
 MarkupSafe==0.23
-pbr==1.10.0
 requests==2.8.1
-six==1.10.0
-stevedore==1.17.0
-virtualenv==15.0.2
-virtualenv-clone==0.2.6
-virtualenvwrapper==4.7.1
-Werkzeug==0.11.10
+Werkzeug==0.11.2
