@@ -1,25 +1,17 @@
-# -*- coding: utf-8 -*-
-
 from xml.etree import ElementTree
 import re
 import requests
-from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL, SB_ARTICLE_BASE_URL, ARTICLE_URI_KEY, PRODUCT_PATH, STORE_PATH, STORE_PRODUCT_PATH
+from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL, SB_ARTICLE_BASE_URL, ARTICLE_URI_KEY
 from xmldictconfig import XmlDictConfig
 
 hours_string_pattern = re.compile('\d{4}-\d{2}-\d{2};\d{2}:\d{2};\d{2}:\d{2}')
 
 
-def get_resources(test=False):
-    if test:
-        temp_products = preprocess_products(lower_keys(load_resource_to_json(PRODUCT_PATH)))
-        temp_stores = preprocess_stores(lower_keys(load_resource_to_json(STORE_PATH)))
-        temp_store_products, temp_suffix_set = preprocess_store_products(
-            lower_keys(load_resource_to_json(STORE_PRODUCT_PATH)))
-    else:
-        temp_products = preprocess_products(lower_keys(get_resource_to_json(PRODUCT_URL)))
-        temp_stores = preprocess_stores(lower_keys(get_resource_to_json(STORE_URL)))
-        temp_store_products, temp_suffix_set = preprocess_store_products(
-            lower_keys(get_resource_to_json(STORE_PRODUCT_URL)))
+def get_resources():
+    temp_products = preprocess_products(lower_keys(get_resource_to_json(PRODUCT_URL)))
+    temp_stores = preprocess_stores(lower_keys(get_resource_to_json(STORE_URL)))
+    temp_store_products, temp_suffix_set = preprocess_store_products(
+        lower_keys(get_resource_to_json(STORE_PRODUCT_URL)))
     return temp_products, temp_stores, temp_store_products, temp_suffix_set
 
 
@@ -50,6 +42,7 @@ def preprocess_store_products(temp_store_products):
 
 
 def preprocess_article(article):
+    department, article_type = preprocess_department(article.get('varugrupp'))
     temp_article = {
         'abv': article.get('alkoholhalt'),
         'year': article.get('argang'),
@@ -74,18 +67,23 @@ def preprocess_article(article):
         'origin': article.get('ursprung'),
         'origin_country': article.get('ursprunglandnamn'),
         'article_id': article.get('varnummer'),
-        'article_department': article.get('varugrupp'),
-        'type': article.get('typ'),
+        'article_department': department,
+        'type': article_type,
         'volume_ml': article.get('volymiml'),
-        'recycle_value': article.get('pant'),
-        'ethical': article.get('etiskt') == '1',
-        'obsolete': article.get('utgått') == '1'
+        'recycle_value': article.get('pant')
     }
     temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
                                               ARTICLE_URI_KEY[temp_article['article_department']],
                                               '-'.join(temp_article['name'].replace('\'', '').lower().split()),
                                               temp_article['article_number'])
     return temp_article
+
+
+def preprocess_department(article_department):
+    if ', ' in article_department:
+        department, article_type = article_department.split(', ', 1)
+        return department, article_type
+    return article_department, None
 
 
 def preprocess_store(store):
@@ -120,16 +118,9 @@ def preprocess_hours_open(hours_open):
         hours_open_by_day.append({'date': date, 'start': start, 'end': end})
     return hours_open_by_day
 
+
 def get_resource_to_json(url):
     r = requests.get(url)
     root = ElementTree.fromstring(r.text.encode('utf-8'))
-    return _resource_to_json(root)
-
-def load_resource_to_json(f):
-    tree = ElementTree.parse(f)
-    return _resource_to_json(tree.getroot())
-
-def _resource_to_json(root):
     xmldict = XmlDictConfig(root)
     return xmldict
-
