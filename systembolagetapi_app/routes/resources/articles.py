@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, abort
-from systembolagetapi_app import app, sb_articles
+from flask import jsonify, abort, request
+from systembolagetapi_app import app, sb_articles, cache
+from systembolagetapi_app.config import CACHE_TIMEOUT
 from bs4 import BeautifulSoup
 import requests
+import json
 
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
@@ -11,6 +13,7 @@ def get_products():
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
+@cache.cached(timeout=CACHE_TIMEOUT)
 def get_product(article_number):
     matching_article = next((article for article in sb_articles if article['article_id'] == article_number), None)
     if not matching_article:
@@ -49,4 +52,4 @@ def get_departments():
             depts_set.add(article['article_department'])
     if not depts:
         abort(404)
-    return jsonify({'departments': depts})
+    return make_response(jsonify({'departments': list(depts_set)}))
