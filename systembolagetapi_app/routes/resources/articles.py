@@ -8,7 +8,10 @@ import requests
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
 def get_products():
-    offset = request.args.get('offset', 0)
+    try:
+        offset = int(request.args.get('offset', 0))
+    except ValueError:
+        abort(400)
     next_offset = offset + PAGINATION_LIMIT
     return jsonify({'articles': sb_articles[offset:next_offset], 'next_offset': next_offset})
 
