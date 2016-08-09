@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, abort, request
-from systembolagetapi_app import app, sb_articles
+from systembolagetapi_app import app
 from systembolagetapi_app.config import PAGINATION_LIMIT
 from bs4 import BeautifulSoup
 import requests
@@ -12,16 +12,17 @@ def get_products():
         offset = int(request.args.get('offset', 0))
     except ValueError:
         abort(400)
-    next_offset = offset + PAGINATION_LIMIT
-    return jsonify({'articles': sb_articles[offset:next_offset], 'next_offset': next_offset})
+    else:
+        next_offset = offset + PAGINATION_LIMIT
+        return jsonify({'articles': app.sb_articles[offset:next_offset], 'next_offset': next_offset})
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
 def get_product(article_number):
-    matching_article = next((article for article in sb_articles if article['article_id'] == article_number), None)
+    matching_article = next((article for article in app.sb_articles if article['article_id'] == article_number), None)
     if not matching_article:
         # Try again with the article number instead of ID
-        matching_article = next((article for article in sb_articles if article['article_number'] == article_number),
+        matching_article = next((article for article in app.sb_articles if article['article_number'] == article_number),
                                 None)
         if not matching_article:
             abort(404)
@@ -49,7 +50,7 @@ def get_product(article_number):
 def get_departments():
     depts_set = set()
     depts = []
-    for article in sb_articles:
+    for article in app.sb_articles:
         if not article['article_department'] in depts_set:
             depts.append('%s, %s' % (article['article_department'], article['name']))
             depts_set.add(article['article_department'])
