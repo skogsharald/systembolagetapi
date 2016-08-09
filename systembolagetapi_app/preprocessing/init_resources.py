@@ -70,7 +70,7 @@ def preprocess_article(article):
         'sale_start': article.get('saljstart'),
         'delivery_end': article.get('slutlev'),
         'assortment': article.get('sortiment'),
-        'uri': '/systembolaget/api/article/%s' % article.get('varnummer'),
+        'uri': '/systembolaget/api/articles/%s' % article.get('varnummer'),
         'origin': article.get('ursprung'),
         'origin_country': article.get('ursprunglandnamn'),
         'article_id': article.get('varnummer'),
