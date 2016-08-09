@@ -51,7 +51,7 @@ def preprocess_store_products(temp_store_products):
 
 def preprocess_article(article):
     temp_article = {
-        'abv': article.get('alkoholhalt'),
+        'abv': article.get('alkoholhalt').replace('%', ''),
         'year': article.get('argang'),
         'internal_article_id': article.get('artikelid'),
         'ecological': article.get('ekologisk') == '1',
