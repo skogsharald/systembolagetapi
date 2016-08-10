@@ -7,7 +7,12 @@ import requests
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
 def get_products():
-    return jsonify({'articles': sb_articles})
+    return jsonify({'articles': [{
+    	'article_id': article['article_id'],
+    	'name': article['name'], 
+    	'uri': article['uri']
+    	} for article in sb_articles
+    	]})
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
