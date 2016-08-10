@@ -51,7 +51,7 @@ def preprocess_store_products(temp_store_products):
 
 def preprocess_article(article):
     temp_article = {
-        'abv': article.get('alkoholhalt'),
+        'abv': float(article.get('alkoholhalt').replace('%', '')),
         'year': article.get('argang'),
         'internal_article_id': article.get('artikelid'),
         'ecological': article.get('ekologisk') == '1',
@@ -62,8 +62,8 @@ def preprocess_article(article):
         'name': article.get('namn'),
         'name2': article.get('namn2'),
         'article_number': article.get('nr'),
-        'price_incl_vat': article.get('prisinklmoms'),
-        'price_per_liter': article.get('prisperliter'),
+        'price_incl_vat': float(article.get('prisinklmoms')),
+        'price_per_liter': float(article.get('prisperliter')),
         'producer': article.get('producent'),
         'year_tested': article.get('provadargang'),
         'raw_materials': article.get('ravarorbeskrivning'),
@@ -76,7 +76,7 @@ def preprocess_article(article):
         'article_id': article.get('varnummer'),
         'article_department': article.get('varugrupp'),
         'type': article.get('typ'),
-        'volume_ml': article.get('volymiml'),
+        'volume_ml': float(article.get('volymiml')),
         'recycle_value': article.get('pant'),
         'ethical': article.get('etiskt') == '1',
         'obsolete': article.get('utgått') == '1'
