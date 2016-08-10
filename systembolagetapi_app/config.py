@@ -9,6 +9,7 @@ PRODUCT_URL = 'http://www.systembolaget.se/api/assortment/products/xml'
 STORE_URL = 'http://www.systembolaget.se/api/assortment/stores/xml'
 STORE_PRODUCT_URL = 'http://www.systembolaget.se/api/assortment/stock/xml'
 SB_ARTICLE_BASE_URL = 'http://www.systembolaget.se/dryck'
+PAGINATION_LIMIT = 15
 ARTICLE_URI_KEY = {
 	u'Alkoholfritt' : 'alkoholfritt', 
 	u'Likör' : 'sprit', 

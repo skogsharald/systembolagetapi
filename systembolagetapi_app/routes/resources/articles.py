@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, abort
+from flask import jsonify, abort, request
 from systembolagetapi_app import app, sb_articles
+from systembolagetapi_app.config import PAGINATION_LIMIT
 from bs4 import BeautifulSoup
 import requests
 
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
 def get_products():
-    return jsonify({'articles': sb_articles})
+    try:
+        offset = int(request.args.get('offset', 0))
+    except ValueError:
+        abort(400)
+    next_offset = offset + PAGINATION_LIMIT
+    return jsonify({'articles': sb_articles[offset:next_offset], 'next_offset': next_offset})
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
