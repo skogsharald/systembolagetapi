@@ -67,7 +67,6 @@ def get_products():
             results = search(args)
         else:
             results = app.sb_articles
-
     except ValueError:
         abort(400)
     else:
