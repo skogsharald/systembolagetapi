@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, abort, request
-from systembolagetapi_app import app
+from systembolagetapi_app import app, cache
+from werkzeug.datastructures import MultiDict
+from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 from bs4 import BeautifulSoup
 import requests
+import re
 
 
 def find_intersect(lists):
@@ -18,93 +21,85 @@ def find_intersect(lists):
     return result
 
 
+def search(args):
+    possible_results = []
+    possible_results_ids = []
+    for query, value in args.iteritems():
+        partial_results = []
+        partial_results_ids = set()
+        values = value.split(',')  # Comma-separated -> list
+        for v in values:
+            for article in app.sb_articles:
+                found = False
+                if article['article_id'] not in partial_results_ids:
+                    # Bool must be before int as isinstance(False, int) == True
+                    if isinstance(article[query], bool):
+                        # Both True and 1 OR False and 0
+                        if article[query] and (v == "true" or v == "1"):
+                            found = True
+                        elif not article[query] and (v == "false" or v == "0"):
+                            found = True
+                    elif isinstance(article[query], str) and article[query].lower() == v.lower():
+                        found = True
+                    elif isinstance(article[query], int) and article[query] == int(v):
+                        found = True
+                    elif isinstance(article[query], float) and article[query] == float(v):
+                        found = True
+                if found:
+                    partial_results.append(article)
+                    partial_results_ids.add(article['article_id'])
+        possible_results.extend(partial_results)
+        possible_results_ids.append(partial_results_ids)
+    results_ids_intersect = find_intersect(possible_results_ids)
+    results = [res for res in possible_results if res['article_id'] in results_ids_intersect]
+    return results
+
+
 @app.route('/systembolaget/api/articles', methods=['GET'])
 def get_products():
-    if request.args:
-        possible_results = []
-        possible_results_ids = []
-        for query, value in request.args.iteritems():
-            partial_results = []
-            partial_results_ids = set()
-            values = value.split(',')  # Comma-separated -> list
-            for v in values:
-                for article in app.sb_articles:
-                    found = False
-                    if article['article_id'] not in partial_results_ids:
-                        # Bool must be before int as isinstance(False, int) == True
-                        if isinstance(article[query], bool):
-                            # Both True and 1 OR False and 0
-                            if article[query] and (v == "true" or v == "1"):
-                                found = True
-                            elif not article[query] and (v == "false" or v == "0"):
-                                found = True
-                        elif isinstance(article[query], str) and article[query].lower() == v.lower():
-                            found = True
-                        elif isinstance(article[query], int) and article[query] == int(v):
-                            found = True
-                        elif isinstance(article[query], float) and article[query] == float(v):
-                            found = True
-                    if found:
-                        partial_results.append(article)
-                        partial_results_ids.add(article['article_id'])
-            possible_results.extend(partial_results)
-            possible_results_ids.append(partial_results_ids)
-        results_ids_intersect = find_intersect(possible_results_ids)
-        results = [res for res in possible_results if res['article_id'] in results_ids_intersect]
+    try:
+        offset = int(request.args.get('offset', 0))
+        if offset < 0 or not isinstance(offset, int) or isinstance(offset, bool):  # isinstance(True, int) == True...
+            raise ValueError
+        args = MultiDict(request.args)
+        args.pop('offset', None)  # Remove offset if it is there
+        if args:
+            results = search(args)
+        else:
+            results = app.sb_articles
 
-
-
-        """
-        for query, value in request.args.iteritems():
-            values = value.split(',')  # Comma-separated -> list
-            if results:
-                new_partial = []
-                for v in values:
-                    for article in results:
-                        # Bool must be before int as isinstance(False, int) == True
-                        if isinstance(article[query], bool):
-                            # Both True and 1 OR False and 0
-                            if article[query] and (v == "True" or v == "1"):
-                                new_partial.append(article)
-                            elif not article[query] and (v == "False" or v == "0"):
-                                new_partial.append(article)
-                        elif isinstance(article[query], str) and article[query].lower() == v.lower():
-                            new_partial.append(article)
-                        elif isinstance(article[query], int) and article[query] == int(v):
-                            new_partial.append(article)
-                        elif isinstance(article[query], float) and article[query] == float(v):
-                            new_partial.append(article)
-
-                results = new_partial
-            else:
-                for v in values:
-                    for article in app.sb_articles:
-                        if article['article_id'] not in result_ids:
-                            # Bool must be before int as isinstance(False, int) == True
-                            if isinstance(article[query], bool):
-                                # Both True and 1 OR False and 0
-                                if article[query] and (v == "true" or v == "1"):
-                                    results.append(article)
-                                    result_ids.add(article['article_id'])
-                                elif not article[query] and (v == "false" or v == "0"):
-                                    results.append(article)
-                                    result_ids.add(article['article_id'])
-                            elif isinstance(article[query], str) and article[query].lower() == v.lower():
-                                results.append(article)
-                                result_ids.add(article['article_id'])
-                            elif isinstance(article[query], int) and article[query] == int(v):
-                                results.append(article)
-                                result_ids.add(article['article_id'])
-                            elif isinstance(article[query], float) and article[query] == float(v):
-                                results.append(article)
-                                result_ids.add(article['article_id'])
-        """
-        return jsonify({'articles': results})
+    except ValueError:
+        abort(400)
     else:
-        return jsonify({'articles': app.sb_articles})
+        next_offset = offset + min(PAGINATION_LIMIT, len(results[offset:]))
+        if offset == 0:
+            if len(results[next_offset:]) == 0:
+                next_url = None
+            else:
+                next_url = '%s&offset=%s' % (request.url, next_offset) if args else '%s?offset=%s' % (request.url,
+                                                                                                      next_offset)
+            prev_url = None
+        else:
+            if len(results[next_offset:]) == 0:
+                next_url = None
+            else:
+                next_url = re.sub(r'offset=\d+', 'offset=%s' % next_offset, request.url)
+            if offset-PAGINATION_LIMIT <= 0:
+                prev_url = re.sub(r'&offset=\d+', '', request.url)
+            else:
+                prev_url = re.sub(r'&offset=\d+', '&offset=%s' % (offset-PAGINATION_LIMIT), request.url)
+        meta = {'count': len(results[offset:next_offset]),
+                'offset': offset,
+                'total_count': len(results),
+                'filters': args,
+                'next': next_url,
+                'previous': prev_url
+                }
+        return jsonify({'articles': results[offset:next_offset], 'meta': meta})
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
+@cache.cached(timeout=CACHE_TIMEOUT)
 def get_product(article_number):
     matching_article = next((article for article in app.sb_articles if article['article_id'] == article_number), None)
     if not matching_article:
@@ -143,4 +138,4 @@ def get_departments():
             depts_set.add(article['article_department'])
     if not depts:
         abort(404)
-    return jsonify({'departments': depts})
+    return jsonify({'departments': list(depts_set)})
