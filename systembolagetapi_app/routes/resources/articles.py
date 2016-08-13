@@ -5,12 +5,56 @@ from bs4 import BeautifulSoup
 import requests
 
 
+def find_intersect(lists):
+    """
+    Finds the intersection of multiple lists.
+    :param lists: list of the type [[1,3,4],[1,2,3],[1,3,5]].
+    :return: The intersection of lists (e.g. [1,3])
+    """
+    sets = iter(lists)
+    result = next(sets)
+    for s in sets:
+        result = result.intersection(s)
+    return result
+
+
 @app.route('/systembolaget/api/articles', methods=['GET'])
 def get_products():
-    print request.args
     if request.args:
-        result_ids = set()
-        results = []
+        possible_results = []
+        possible_results_ids = []
+        for query, value in request.args.iteritems():
+            partial_results = []
+            partial_results_ids = set()
+            values = value.split(',')  # Comma-separated -> list
+            for v in values:
+                for article in app.sb_articles:
+                    found = False
+                    if article['article_id'] not in partial_results_ids:
+                        # Bool must be before int as isinstance(False, int) == True
+                        if isinstance(article[query], bool):
+                            # Both True and 1 OR False and 0
+                            if article[query] and (v == "true" or v == "1"):
+                                found = True
+                            elif not article[query] and (v == "false" or v == "0"):
+                                found = True
+                        elif isinstance(article[query], str) and article[query].lower() == v.lower():
+                            found = True
+                        elif isinstance(article[query], int) and article[query] == int(v):
+                            found = True
+                        elif isinstance(article[query], float) and article[query] == float(v):
+                            found = True
+                    if found:
+                        partial_results.append(article)
+                        partial_results_ids.add(article['article_id'])
+            possible_results.extend(partial_results)
+            possible_results_ids.append(partial_results_ids)
+        results_ids_intersect = find_intersect(possible_results_ids)
+        results = [res for res in possible_results if res['article_id'] in results_ids_intersect]
+
+
+
+        """
         for query, value in request.args.iteritems():
             values = value.split(',')  # Comma-separated -> list
             if results:
@@ -54,7 +98,7 @@ def get_products():
                             elif isinstance(article[query], float) and article[query] == float(v):
                                 results.append(article)
                                 result_ids.add(article['article_id'])
-
+        """
         return jsonify({'articles': results})
     else:
         return jsonify({'articles': app.sb_articles})
