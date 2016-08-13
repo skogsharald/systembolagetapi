@@ -1,11 +1,17 @@
-from flask import jsonify, abort
+from flask import jsonify, abort, request
 from systembolagetapi_app import app, cache
-from systembolagetapi_app.config import CACHE_TIMEOUT
+from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 
 
 @app.route('/systembolaget/api/stores', methods=['GET'])
 def get_stores():
-    return jsonify({'stores': app.sb_stores})
+    try:
+        offset = int(request.args.get('offset', 0))
+    except ValueError:
+        abort(400)
+    else:
+        next_offset = offset + PAGINATION_LIMIT
+        return jsonify({'stores': app.sb_stores[offset:next_offset], 'next_offset': next_offset})
 
 
 @app.route('/systembolaget/api/stores/<string:store_id>', methods=['GET'])

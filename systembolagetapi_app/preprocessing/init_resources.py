@@ -52,7 +52,7 @@ def preprocess_store_products(temp_store_products):
 
 def preprocess_article(article):
     temp_article = {
-        'abv': article.get('alkoholhalt'),
+        'abv': article.get('alkoholhalt').replace('%', ''),
         'year': article.get('argang'),
         'internal_article_id': article.get('artikelid'),
         'ecological': article.get('ekologisk') == '1',
@@ -71,7 +71,7 @@ def preprocess_article(article):
         'sale_start': article.get('saljstart'),
         'delivery_end': article.get('slutlev'),
         'assortment': article.get('sortiment'),
-        'uri': '/systembolaget/api/article/%s' % article.get('varnummer'),
+        'uri': '/systembolaget/api/articles/%s' % article.get('varnummer'),
         'origin': article.get('ursprung'),
         'origin_country': article.get('ursprunglandnamn'),
         'article_id': article.get('varnummer'),
