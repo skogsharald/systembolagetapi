@@ -1,6 +1,6 @@
 from flask import jsonify, abort, request
-from systembolagetapi_app import app
-from systembolagetapi_app.config import PAGINATION_LIMIT
+from systembolagetapi_app import app, cache
+from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 
 
 @app.route('/systembolaget/api/stock', methods=['GET'])
@@ -23,6 +23,7 @@ def get_store_stock(store_id):
 
 
 @app.route('/systembolaget/api/stock/article/<string:product_id>', methods=['GET'])
+@cache.cached(timeout=CACHE_TIMEOUT)
 def get_product_stores(product_id):
     store_list = []
     for store in app.sb_stock:

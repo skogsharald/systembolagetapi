@@ -11,6 +11,7 @@ hours_string_pattern = re.compile('\d{4}-\d{2}-\d{2};\d{2}:\d{2};\d{2}:\d{2}')
 
 def get_resources(test=False):
     if test:
+        print '---- READING DATA FROM DISK ----'
         temp_products = preprocess_products(lower_keys(load_resource_to_json(PRODUCT_PATH)))
         temp_stores = preprocess_stores(lower_keys(load_resource_to_json(STORE_PATH)))
         temp_store_products, temp_suffix_set = preprocess_store_products(
