@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 class XmlListConfig(list):
     def __init__(self, aList):
         for element in aList:

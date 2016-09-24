@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import jsonify, abort, request
 from systembolagetapi_app import app, cache
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT

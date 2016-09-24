@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import argparse
 from systembolagetapi_app import app
 from systembolagetapi_app.preprocessing.init_resources import get_resources

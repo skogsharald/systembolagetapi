@@ -83,7 +83,7 @@ def preprocess_article(article):
         'obsolete': article.get('utgått') == '1'
     }
     temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
-                                              ARTICLE_URI_KEY[temp_article['article_department']],
+                                              ARTICLE_URI_KEY[temp_article['article_department'].lower()],
                                               '-'.join(temp_article['name'].replace('\'', '').lower().split()),
                                               temp_article['article_number'])
     return temp_article
@@ -121,14 +121,17 @@ def preprocess_hours_open(hours_open):
         hours_open_by_day.append({'date': date, 'start': start, 'end': end})
     return hours_open_by_day
 
+
 def get_resource_to_json(url):
     r = requests.get(url)
     root = ElementTree.fromstring(r.text.encode('utf-8'))
     return _resource_to_json(root)
 
+
 def load_resource_to_json(f):
     tree = ElementTree.parse(f)
     return _resource_to_json(tree.getroot())
+
 
 def _resource_to_json(root):
     xmldict = XmlDictConfig(root)

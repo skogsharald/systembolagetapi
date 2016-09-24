@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from systembolagetapi_app import app
 from flask import jsonify, make_response
 

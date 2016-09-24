@@ -4,6 +4,7 @@ from systembolagetapi_app import app, cache
 from werkzeug.datastructures import MultiDict
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 from bs4 import BeautifulSoup
+import json
 import requests
 import re
 
@@ -22,16 +23,17 @@ def find_intersect(lists):
 
 
 def search(args):
-    possible_results = []
-    possible_results_ids = []
+    possible_results = []  # Full article json objects, may be duplicates
+    possible_results_ids = []  # Article id's of above objects
     for query, value in args.iteritems():
-        partial_results = []
-        partial_results_ids = set()
-        values = value.split(',')  # Comma-separated -> list
+        partial_results = []  # Results of this query
+        partial_results_ids = set()  # Set containing the article id's of this query
+        values = value.split(',')  # Comma-separated -> list for e.g origin=italien,usa
         for v in values:
             for article in app.sb_articles:
                 found = False
                 if article['article_id'] not in partial_results_ids:
+                    # TODO: Should this awkward search be made better?
                     # Bool must be before int as isinstance(False, int) == True
                     if isinstance(article[query], bool):
                         # Both True and 1 OR False and 0
@@ -39,28 +41,36 @@ def search(args):
                             found = True
                         elif not article[query] and (v == "false" or v == "0"):
                             found = True
-                    elif isinstance(article[query], str) and article[query].lower() == v.lower():
+                    elif ((isinstance(article[query], str) or isinstance(article[query], unicode)) and
+                            unicode(article[query].lower()) == unicode(v.lower())):
                         found = True
                     elif isinstance(article[query], int) and article[query] == int(v):
                         found = True
                     elif isinstance(article[query], float) and article[query] == float(v):
                         found = True
                 if found:
+                    # Add this article and its id to the partial result list and set
                     partial_results.append(article)
                     partial_results_ids.add(article['article_id'])
+        # Add the results of the query to the possible result lists
         possible_results.extend(partial_results)
         possible_results_ids.append(partial_results_ids)
+    # Find intersections in the id lists to find only unique id's
     results_ids_intersect = find_intersect(possible_results_ids)
+    # Use this intersection list to single out the unique articles
     results = [res for res in possible_results if res['article_id'] in results_ids_intersect]
     return results
 
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
+@cache.cached(timeout=CACHE_TIMEOUT)
 def get_products():
     try:
         offset = int(request.args.get('offset', 0))
         if offset < 0 or not isinstance(offset, int) or isinstance(offset, bool):  # isinstance(True, int) == True...
             raise ValueError
+        # The multidict is a dict capable of containing several non-unique keys
+        # (Necessary for origin=italien&origin=usa)
         args = MultiDict(request.args)
         args.pop('offset', None)  # Remove offset if it is there
         if args:
@@ -70,23 +80,27 @@ def get_products():
     except ValueError:
         abort(400)
     else:
-        next_offset = offset + min(PAGINATION_LIMIT, len(results[offset:]))
+        encoded_url = request.url.replace(' ', '%20')  # Replace all spaces in the URL string (why are they even there?)
+        next_offset = offset + min(PAGINATION_LIMIT, len(results[offset:]))  # Find the next offset value
         if offset == 0:
+            # Append the offset value to the URL string
             if len(results[next_offset:]) == 0:
                 next_url = None
             else:
-                next_url = '%s&offset=%s' % (request.url, next_offset) if args else '%s?offset=%s' % (request.url,
-                                                                                                      next_offset)
+                next_url = '%s&offset=%s' % (encoded_url, next_offset) if args else \
+                    '%s?offset=%s' % (encoded_url, next_offset)
             prev_url = None
         else:
+            # Replace the offset value in the URL string
             if len(results[next_offset:]) == 0:
                 next_url = None
             else:
-                next_url = re.sub(r'offset=\d+', 'offset=%s' % next_offset, request.url)
+                next_url = re.sub(r'offset=\d+', 'offset=%s' % next_offset, encoded_url)
+
             if offset-PAGINATION_LIMIT <= 0:
-                prev_url = re.sub(r'&offset=\d+', '', request.url)
+                prev_url = re.sub(r'&offset=\d+', '', encoded_url)
             else:
-                prev_url = re.sub(r'&offset=\d+', '&offset=%s' % (offset-PAGINATION_LIMIT), request.url)
+                prev_url = re.sub(r'&offset=\d+', '&offset=%s' % (offset-PAGINATION_LIMIT), encoded_url)
         meta = {'count': len(results[offset:next_offset]),
                 'offset': offset,
                 'total_count': len(results),
