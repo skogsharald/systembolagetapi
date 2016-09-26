@@ -63,7 +63,7 @@ def search(args):
 
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
-@cache.cached(timeout=CACHE_TIMEOUT)
+#@cache.cached(timeout=CACHE_TIMEOUT)
 def get_products():
     try:
         offset = int(request.args.get('offset', 0))
@@ -108,7 +108,7 @@ def get_products():
                 'next': next_url,
                 'previous': prev_url
                 }
-        return jsonify({'articles': results[offset:next_offset], 'meta': meta})
+        return jsonify(**{'articles': results[offset:next_offset], 'meta': meta})
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])

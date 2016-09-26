@@ -3,10 +3,23 @@
 from xml.etree import ElementTree
 import re
 import requests
+import unicodedata
 from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL, SB_ARTICLE_BASE_URL, ARTICLE_URI_KEY, PRODUCT_PATH, STORE_PATH, STORE_PRODUCT_PATH
 from xmldictconfig import XmlDictConfig
 
 hours_string_pattern = re.compile('\d{4}-\d{2}-\d{2};\d{2}:\d{2};\d{2}:\d{2}')
+
+
+def internationalize(text):
+    """
+    Internationalizes text by replacing special characters with ascii 'equivalents'
+    e.g. åäö -> aao
+    :param text: Text to internationalize
+    :return: Internationalized string
+    """
+    if not isinstance(text, unicode):
+        text = unicode(text)
+    return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
 
 
 def get_resources(test=False):
@@ -84,7 +97,7 @@ def preprocess_article(article):
     }
     temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
                                               ARTICLE_URI_KEY[temp_article['article_department'].lower()],
-                                              '-'.join(temp_article['name'].replace('\'', '').lower().split()),
+                                              '-'.join(internationalize(temp_article['name']).replace('\'', '').lower().split()),
                                               temp_article['article_number'])
     return temp_article
 
