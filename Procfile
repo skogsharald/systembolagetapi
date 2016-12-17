@@ -1,0 +1,1 @@
+web: gunicorn systembolagetapi_app:app

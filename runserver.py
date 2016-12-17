@@ -7,7 +7,7 @@ from systembolagetapi_app.preprocessing.init_resources import get_resources
 def main(args):
     if args.debug:
         print '---- RUNNING IN DEBUG MODE ----'
-    app.sb_articles, app.sb_stores, app.sb_stock, app.suffix_set = get_resources(test=args.debug)
+    #app.sb_articles, app.sb_stores, app.sb_stock, app.suffix_set = get_resources(test=args.debug)
     app.run(debug=args.debug)
 
 if __name__ == '__main__':
