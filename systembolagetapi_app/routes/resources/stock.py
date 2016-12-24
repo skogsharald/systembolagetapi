@@ -14,6 +14,7 @@ def get_stock():
         abort(400)
     else:
         next_offset = offset + PAGINATION_LIMIT
+        # TODO: META
         return jsonify({'stock': stock[offset:next_offset], 'next_offset': next_offset})
 
 
@@ -44,4 +45,5 @@ def get_product_stores(product_id):
                     store_list.append(store['store_id'])
         if not store_list:
             abort(404)
+    # TODO: META
     return jsonify({'stock': store_list})

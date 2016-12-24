@@ -49,14 +49,17 @@ def lower_keys(x):
 
 
 def preprocess_products(temp_products):
+    print '---- INSERTING %s ARTICLES ----' % len(temp_products['artikel'])
     map(preprocess_article, temp_products['artikel'])
 
 
 def preprocess_stores(temp_stores):
+    print '---- INSERTING %s STORES ----' % len(temp_stores['butikombud'])
     map(preprocess_store, temp_stores['butikombud'])
 
 
 def preprocess_store_products(temp_store_products):
+    print '---- INSERTING STOCK INFO FOR %s STORES ----' % len(temp_store_products['butik'])
     for store in temp_store_products['butik']:
         db_interface.insert_item({'article_number': store['artikelnr'], 'store_id': store['butiknr']}, 'stock')
 

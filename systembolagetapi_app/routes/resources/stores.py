@@ -14,6 +14,7 @@ def get_stores():
         abort(400)
     else:
         next_offset = offset + PAGINATION_LIMIT
+        # TODO: META
         return jsonify({'stores': stores[offset:next_offset], 'next_offset': next_offset})
 
 
