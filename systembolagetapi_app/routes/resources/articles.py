@@ -3,6 +3,7 @@ from flask import jsonify, abort, request
 from systembolagetapi_app import app, cache
 from werkzeug.datastructures import MultiDict
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
+import systembolagetapi_app.db_interface as db_interface
 from bs4 import BeautifulSoup
 import json
 import requests
@@ -30,28 +31,13 @@ def search(args):
         partial_results_ids = set()  # Set containing the article id's of this query
         values = value.split(',')  # Comma-separated -> list for e.g origin=italien,usa
         for v in values:
-            for article in app.sb_articles:
-                found = False
-                if article['article_id'] not in partial_results_ids:
-                    # TODO: Should this awkward search be made better?
-                    # Bool must be before int as isinstance(False, int) == True
-                    if isinstance(article[query], bool):
-                        # Both True and 1 OR False and 0
-                        if article[query] and (v == "true" or v == "1"):
-                            found = True
-                        elif not article[query] and (v == "false" or v == "0"):
-                            found = True
-                    elif ((isinstance(article[query], str) or isinstance(article[query], unicode)) and
-                            unicode(article[query].lower()) == unicode(v.lower())):
-                        found = True
-                    elif isinstance(article[query], int) and article[query] == int(v):
-                        found = True
-                    elif isinstance(article[query], float) and article[query] == float(v):
-                        found = True
-                if found:
-                    # Add this article and its id to the partial result list and set
-                    partial_results.append(article)
-                    partial_results_ids.add(article['article_id'])
+            articles = db_interface.get_articles(v, query)
+            if isinstance(v, str) or isinstance(v, unicode):
+                articles.extend(db_interface.get_articles(v.upper(), query))
+                articles.extend(db_interface.get_articles(v.capitalize(), query))
+            for article in articles:
+                partial_results.append(article)
+                partial_results_ids.add(article['article_id'])
         # Add the results of the query to the possible result lists
         possible_results.extend(partial_results)
         possible_results_ids.append(partial_results_ids)
@@ -72,23 +58,26 @@ def get_products():
         # The multidict is a dict capable of containing several non-unique keys
         # (Necessary for origin=italien&origin=usa)
         args = MultiDict(request.args)
-        args.pop('offset', None)  # Remove offset if it is there
+        args.pop('offset', None)  # Remove offset if it is
         if args:
             results = search(args)
         else:
-            results = app.sb_articles
+            results = db_interface.get_articles()
     except ValueError:
         abort(400)
     else:
         encoded_url = request.url.replace(' ', '%20')  # Replace all spaces in the URL string (why are they even there?)
+        if args:
+            encoded_url = unicode(encoded_url.split('?')[0])
+            encoded_url += u'?%s' % u'&'.join([u'%s=%s' % (unicode(k), unicode(v)) for k, v in args.iteritems()])
         next_offset = offset + min(PAGINATION_LIMIT, len(results[offset:]))  # Find the next offset value
         if offset == 0:
             # Append the offset value to the URL string
             if len(results[next_offset:]) == 0:
                 next_url = None
             else:
-                next_url = '%s&offset=%s' % (encoded_url, next_offset) if args else \
-                    '%s?offset=%s' % (encoded_url, next_offset)
+                next_url = u'%s&offset=%s' % (encoded_url, next_offset) if args else \
+                    u'%s?offset=%s' % (encoded_url, next_offset)
             prev_url = None
         else:
             # Replace the offset value in the URL string
@@ -104,23 +93,32 @@ def get_products():
         meta = {'count': len(results[offset:next_offset]),
                 'offset': offset,
                 'total_count': len(results),
-                'filters': args,
+                'filters': dict(args),
                 'next': next_url,
                 'previous': prev_url
                 }
-        return jsonify(**{'articles': results[offset:next_offset], 'meta': meta})
+        return jsonify({'articles': results[offset:next_offset], 'meta': meta})
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
 @cache.cached(timeout=CACHE_TIMEOUT)
 def get_product(article_number):
-    matching_article = next((article for article in app.sb_articles if article['article_id'] == article_number), None)
+    matching_articles = db_interface.get_articles(article_number)
+    if not matching_articles:
+        matching_articles = db_interface.get_articles(article_number, 'article_number')
+    if not matching_articles:
+        abort(404)
+    else:
+        matching_article = dict(matching_articles[0])
+    """
+    matching_article = next((article for article in articles if article['article_id'] == article_number), None)
     if not matching_article:
         # Try again with the article number instead of ID
-        matching_article = next((article for article in app.sb_articles if article['article_number'] == article_number),
+        matching_article = next((article for article in articles if article['article_number'] == article_number),
                                 None)
         if not matching_article:
             abort(404)
+    """
     image_url = None
     description = None
     try:
@@ -145,7 +143,8 @@ def get_product(article_number):
 def get_departments():
     depts_set = set()
     depts = []
-    for article in app.sb_articles:
+    articles = db_interface.get_articles()
+    for article in articles:
         if not article['article_department'] in depts_set:
             depts.append('%s, %s' % (article['article_department'], article['name']))
             depts_set.add(article['article_department'])

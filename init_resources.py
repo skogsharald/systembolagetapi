@@ -4,7 +4,9 @@ from xml.etree import ElementTree
 import re
 import requests
 import unicodedata
-from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL, SB_ARTICLE_BASE_URL, ARTICLE_URI_KEY, PRODUCT_PATH, STORE_PATH, STORE_PRODUCT_PATH
+from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL, SB_ARTICLE_BASE_URL, \
+    ARTICLE_URI_KEY, PRODUCT_PATH, STORE_PATH, STORE_PRODUCT_PATH
+from systembolagetapi_app import db_interface
 from xmldictconfig import XmlDictConfig
 
 hours_string_pattern = re.compile('\d{4}-\d{2}-\d{2};\d{2}:\d{2};\d{2}:\d{2}')
@@ -25,16 +27,13 @@ def internationalize(text):
 def get_resources(test=False):
     if test:
         print '---- READING DATA FROM DISK ----'
-        temp_products = preprocess_products(lower_keys(load_resource_to_json(PRODUCT_PATH)))
-        temp_stores = preprocess_stores(lower_keys(load_resource_to_json(STORE_PATH)))
-        temp_store_products, temp_suffix_set = preprocess_store_products(
-            lower_keys(load_resource_to_json(STORE_PRODUCT_PATH)))
+        preprocess_products(lower_keys(load_resource_to_json(PRODUCT_PATH)))
+        preprocess_stores(lower_keys(load_resource_to_json(STORE_PATH)))
+        preprocess_store_products(lower_keys(load_resource_to_json(STORE_PRODUCT_PATH)))
     else:
-        temp_products = preprocess_products(lower_keys(get_resource_to_json(PRODUCT_URL)))
-        temp_stores = preprocess_stores(lower_keys(get_resource_to_json(STORE_URL)))
-        temp_store_products, temp_suffix_set = preprocess_store_products(
-            lower_keys(get_resource_to_json(STORE_PRODUCT_URL)))
-    return temp_products, temp_stores, temp_store_products, temp_suffix_set
+        preprocess_products(lower_keys(get_resource_to_json(PRODUCT_URL)))
+        #preprocess_stores(lower_keys(get_resource_to_json(STORE_URL)))
+        #preprocess_store_products(lower_keys(get_resource_to_json(STORE_PRODUCT_URL)))
 
 
 def lower_keys(x):
@@ -47,20 +46,16 @@ def lower_keys(x):
 
 
 def preprocess_products(temp_products):
-    return map(preprocess_article, temp_products['artikel'])
+    map(preprocess_article, temp_products['artikel'])
 
 
 def preprocess_stores(temp_stores):
-    return map(preprocess_store, temp_stores['butikombud'])
+    map(preprocess_store, temp_stores['butikombud'])
 
 
 def preprocess_store_products(temp_store_products):
-    temp_suffix_set = set()
     for store in temp_store_products['butik']:
-        for artikelnr in store['artikelnr']:
-            temp_suffix_set.add(artikelnr[-2:])
-    return [{'article_number': store['artikelnr'], 'store_id': store['butiknr']} for store in
-            temp_store_products['butik']], temp_suffix_set
+        db_interface.insert_item({'article_number': store['artikelnr'], 'store_id': store['butiknr']}, 'stock')
 
 
 def preprocess_article(article):
@@ -97,13 +92,17 @@ def preprocess_article(article):
     }
     temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
                                               ARTICLE_URI_KEY[temp_article['article_department'].lower()],
-                                              '-'.join(internationalize(temp_article['name']).replace('\'', '').lower().split()),
+                                              '-'.join(internationalize(temp_article['name']).replace('\'', '')
+                                                       .lower().split()),
                                               temp_article['article_number'])
-    return temp_article
+    db_interface.insert_item(temp_article, 'articles')  # Insert this item into database
+    db_interface.insert_item({'suffix': temp_article['article_number'][-2:],
+                              'packaging': temp_article['packaging']},
+                             'suffices')  # Insert this suffix into database, if it does not already exist
 
 
 def preprocess_store(store):
-    return {
+    temp_store = {
         'address': store.get('address1'),
         'address2': store.get('address2'),
         'address3': store.get('address3'),
@@ -121,6 +120,7 @@ def preprocess_store(store):
         'type': store.get('typ'),
         'uri': '/systembolaget/api/store/%s' % store.get('nr'),
     }
+    db_interface.insert_item(temp_store, 'stores')
 
 
 def preprocess_hours_open(hours_open):
@@ -149,3 +149,7 @@ def load_resource_to_json(f):
 def _resource_to_json(root):
     xmldict = XmlDictConfig(root)
     return xmldict
+
+
+if __name__ == '__main__':
+    get_resources()
