@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import Flask
 from flask.ext.cache import Cache
-from preprocessing.init_resources import get_resources
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
