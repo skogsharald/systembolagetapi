@@ -4,6 +4,7 @@ from xml.etree import ElementTree
 import re
 import requests
 import unicodedata
+import argparse
 from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_URL, SB_ARTICLE_BASE_URL, \
     ARTICLE_URI_KEY, PRODUCT_PATH, STORE_PATH, STORE_PRODUCT_PATH
 from systembolagetapi_app import db_interface
@@ -24,16 +25,18 @@ def internationalize(text):
     return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore')
 
 
-def get_resources(test=False):
-    if test:
+def get_resources(args):
+    func = get_resource_to_json
+    if args.test:
         print '---- READING DATA FROM DISK ----'
-        preprocess_products(lower_keys(load_resource_to_json(PRODUCT_PATH)))
-        preprocess_stores(lower_keys(load_resource_to_json(STORE_PATH)))
-        preprocess_store_products(lower_keys(load_resource_to_json(STORE_PRODUCT_PATH)))
-    else:
-        preprocess_products(lower_keys(get_resource_to_json(PRODUCT_URL)))
-        #preprocess_stores(lower_keys(get_resource_to_json(STORE_URL)))
-        #preprocess_store_products(lower_keys(get_resource_to_json(STORE_PRODUCT_URL)))
+        func = load_resource_to_json
+    if args.reset:
+        print '---- RESETTING DATABASE AND UPDATING DATA ----'
+        db_interface.reset_db()
+
+    preprocess_products(lower_keys(func(PRODUCT_PATH if args.test else PRODUCT_URL)))
+    preprocess_stores(lower_keys(func(STORE_PATH if args.test else STORE_URL)))
+    preprocess_store_products(lower_keys(func(STORE_PRODUCT_PATH if args.test else STORE_PRODUCT_URL)))
 
 
 def lower_keys(x):
@@ -152,4 +155,7 @@ def _resource_to_json(root):
 
 
 if __name__ == '__main__':
-    get_resources()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--reset', action='store_true')
+    parser.add_argument('--test', action='store_true')
+    get_resources(parser.parse_args())

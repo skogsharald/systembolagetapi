@@ -10,6 +10,34 @@ urlparse.uses_netloc.append("postgres")
 url = urlparse.urlparse(os.environ["DATABASE_URL"])
 
 
+def reset_db():
+    conn = None
+    cur = None
+    try:
+        conn = psycopg2.connect(
+            database=url.path[1:],
+            user=url.username,
+            password=url.password,
+            host=url.hostname,
+            port=url.port
+        )
+        cur = conn.cursor()
+        # We only want to insert not-None values
+        cur.execute("TRUNCATE TABLE articles")
+        cur.execute("TRUNCATE TABLE stock")
+        cur.execute("TRUNCATE TABLE stores")
+        cur.execute("TRUNCATE TABLE suffices")
+        conn.commit()
+    except Exception:
+        if cur is not None and conn is not None:
+            conn.rollback()
+            # raise  # Re-raise the last exception
+    finally:
+        if cur is not None and conn is not None:
+            cur.close()
+            conn.close()
+
+
 def insert_item(temp_item, table):
     conn = None
     cur = None
