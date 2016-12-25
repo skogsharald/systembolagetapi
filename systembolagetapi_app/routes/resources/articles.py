@@ -26,15 +26,16 @@ def find_intersect(lists):
 def search(args):
     possible_results = []  # Full article json objects, may be duplicates
     possible_results_ids = []  # Article id's of above objects
-    for query, value in args.iteritems():
+    for query in args:
         partial_results = []  # Results of this query
         partial_results_ids = set()  # Set containing the article id's of this query
-        values = value.split(',')  # Comma-separated -> list for e.g origin=italien,usa
-        for v in values:
+        for v in args.getlist(query):  # The different values for this query in the MultiDict
             articles = db_interface.get_articles(v, query)
             if isinstance(v, str) or isinstance(v, unicode):
                 articles.extend(db_interface.get_articles(v.upper(), query))
                 articles.extend(db_interface.get_articles(v.capitalize(), query))
+            else:
+                articles.extend(db_interface.get_articles(v, query))
             for article in articles:
                 partial_results.append(article)
                 partial_results_ids.add(article['article_id'])
@@ -69,7 +70,11 @@ def get_products():
         encoded_url = request.url.replace(' ', '%20')  # Replace all spaces in the URL string (why are they even there?)
         if args:
             encoded_url = unicode(encoded_url.split('?')[0])
-            encoded_url += u'?%s' % u'&'.join([u'%s=%s' % (unicode(k), unicode(v)) for k, v in args.iteritems()])
+            encoded_args = []
+            for key in args:
+                for value in args.getlist(key):
+                    encoded_args.append('%s=%s' % (key, value))
+            encoded_url += u'?%s' % u'&'.join(encoded_args)
         next_offset = offset + min(PAGINATION_LIMIT, len(results[offset:]))  # Find the next offset value
         if offset == 0:
             # Append the offset value to the URL string

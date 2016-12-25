@@ -7,6 +7,8 @@ import systembolagetapi_app.db_interface as db_interface
 
 @app.route('/systembolaget/api/stores', methods=['GET'])
 def get_stores():
+    # TODO: Search on search words in store
+    # TODO: Search on GPS coordinates? I.e. all stores within a rectangle
     stores = db_interface.get_stores()
     try:
         offset = int(request.args.get('offset', 0))
