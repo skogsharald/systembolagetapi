@@ -52,57 +52,58 @@ def search(args):
 @app.route('/systembolaget/api/articles', methods=['GET'])
 #@cache.cached(timeout=CACHE_TIMEOUT)
 def get_products():
-    try:
-        offset = int(request.args.get('offset', 0))
-        if offset < 0 or not isinstance(offset, int) or isinstance(offset, bool):  # isinstance(True, int) == True...
-            raise ValueError
-        # The multidict is a dict capable of containing several non-unique keys
-        # (Necessary for origin=italien&origin=usa)
-        args = MultiDict(request.args)
-        args.pop('offset', None)  # Remove offset if it is
-        if args:
-            results = search(args)
-        else:
-            results = db_interface.get_articles()
-    except ValueError:
+    offset = int(request.args.get('offset', 0))
+    if offset < 0 or not isinstance(offset, int) or isinstance(offset, bool):  # isinstance(True, int) == True...
         abort(400)
+    # The multidict is a dict capable of containing several non-unique keys
+    # (Necessary for origin=italien&origin=usa)
+    args = MultiDict(request.args)
+    args.pop('offset', None)  # Remove offset if it is present
+    if args:
+        results = search(args)
     else:
-        encoded_url = request.url.replace(' ', '%20')  # Replace all spaces in the URL string (why are they even there?)
-        if args:
-            encoded_url = unicode(encoded_url.split('?')[0])
-            encoded_args = []
-            for key in args:
-                for value in args.getlist(key):
-                    encoded_args.append('%s=%s' % (key, value))
-            encoded_url += u'?%s' % u'&'.join(encoded_args)
-        next_offset = offset + min(PAGINATION_LIMIT, len(results[offset:]))  # Find the next offset value
-        if offset == 0:
-            # Append the offset value to the URL string
-            if len(results[next_offset:]) == 0:
-                next_url = None
-            else:
-                next_url = u'%s&offset=%s' % (encoded_url, next_offset) if args else \
-                    u'%s?offset=%s' % (encoded_url, next_offset)
-            prev_url = None
+        results = db_interface.get_articles()
+    encoded_url = request.url.replace(' ', '%20')  # Replace all spaces in the URL string (why are they even there?)
+    if args:
+        encoded_url = unicode(encoded_url.split('?')[0])
+        encoded_args = []
+        for key in args:
+            for value in args.getlist(key):
+                encoded_args.append('%s=%s' % (key, value))
+        encoded_url += '?%s' % '&'.join(encoded_args)
+        if offset > 0:  # Also append the offset argument
+            encoded_url += '&offset=%s' % offset
+    next_offset = offset + min(PAGINATION_LIMIT, len(results[offset:]))  # Find the next offset value
+    if offset == 0:
+        # Append the offset value to the URL string
+        if len(results[next_offset:]) == 0:
+            next_url = None
         else:
-            # Replace the offset value in the URL string
-            if len(results[next_offset:]) == 0:
-                next_url = None
-            else:
-                next_url = re.sub(r'offset=\d+', 'offset=%s' % next_offset, encoded_url)
+            next_url = '%s&offset=%s' % (encoded_url, next_offset) if args else \
+                '%s?offset=%s' % (encoded_url, next_offset)
+        prev_url = None
+    else:
+        # Replace the offset value in the URL string
+        if len(results[next_offset:]) == 0:
+            next_url = None
+        else:
+            print encoded_url
+            next_url = re.sub(r'offset=\d+', 'offset=%s' % next_offset, encoded_url)
 
-            if offset-PAGINATION_LIMIT <= 0:
-                prev_url = re.sub(r'&offset=\d+', '', encoded_url)
-            else:
-                prev_url = re.sub(r'&offset=\d+', '&offset=%s' % (offset-PAGINATION_LIMIT), encoded_url)
-        meta = {'count': len(results[offset:next_offset]),
-                'offset': offset,
-                'total_count': len(results),
-                'filters': dict(args),
-                'next': next_url,
-                'previous': prev_url
-                }
-        return jsonify({'articles': results[offset:next_offset], 'meta': meta})
+        if offset-PAGINATION_LIMIT <= 0:
+            prev_url = re.sub(r'&offset=\d+', '', encoded_url)
+            if prev_url == encoded_url:
+                prev_url = re.sub(r'\?offset=\d+', '', encoded_url)
+        else:
+            prev_url = re.sub(r'&offset=\d+', '&offset=%s' % (offset-PAGINATION_LIMIT), encoded_url)
+    meta = {'count': len(results[offset:next_offset]),
+            'offset': offset,
+            'total_count': len(results),
+            'filters': dict(args),
+            'next': next_url.encode('utf-8') if next_url is not None else next_url,
+            'previous': prev_url.encode('utf-8') if prev_url is not None else prev_url
+            }
+    return jsonify({'articles': results[offset:next_offset], 'meta': meta})
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])

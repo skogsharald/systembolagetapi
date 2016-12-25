@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from xml.etree import ElementTree
 import re
 import requests
