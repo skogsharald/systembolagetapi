@@ -43,7 +43,7 @@ def _search(args):
                 if not (isinstance(value, int) or isinstance(value, bool)):
                     raise ValueError('Open query was not boolean')
                 value = bool(value)  # convert so 1 -> True, 0 -> False
-                now = datetime.datetime.strptime('2016-12-27 14:00', DATE_FORMAT)
+                now = datetime.datetime.now()
                 for store in _stores:
                     if store['hours_open']:
                         store_open = False
