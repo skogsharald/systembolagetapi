@@ -133,4 +133,4 @@ def get_store(store_id):
     matching_store = db_interface.get_stores(store_id)
     if not matching_store:
         abort(404)
-    return jsonify(matching_store[0])
+    return jsonify({'stores': matching_store[0]})

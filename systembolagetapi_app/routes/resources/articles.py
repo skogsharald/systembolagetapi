@@ -143,7 +143,7 @@ def get_product(article_number):
             image_url = 'http:%s' % img.find('img')['src']
     matching_article['description'] = description
     matching_article['image_url'] = image_url
-    return jsonify(matching_article)
+    return jsonify({'articles': matching_article})
 
 
 @app.route('/systembolaget/api/articles/departments', methods=['GET'])
