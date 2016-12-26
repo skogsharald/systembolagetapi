@@ -5,7 +5,6 @@ from werkzeug.datastructures import MultiDict
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 import systembolagetapi_app.db_interface as db_interface
 from bs4 import BeautifulSoup
-import json
 import requests
 import re
 
@@ -23,7 +22,7 @@ def find_intersect(lists):
     return result
 
 
-def search(args):
+def _search(args):
     possible_results = []  # Full article json objects, may be duplicates
     possible_results_ids = []  # Article id's of above objects
     for query in args:
@@ -31,11 +30,9 @@ def search(args):
         partial_results_ids = set()  # Set containing the article id's of this query
         for v in args.getlist(query):  # The different values for this query in the MultiDict
             articles = db_interface.get_articles(v, query)
-            if isinstance(v, str) or isinstance(v, unicode):
+            if isinstance(v, str) or isinstance(v, unicode):  # Also search with upper case and capitalized words
                 articles.extend(db_interface.get_articles(v.upper(), query))
-                articles.extend(db_interface.get_articles(v.capitalize(), query))
-            else:
-                articles.extend(db_interface.get_articles(v, query))
+                articles.extend(db_interface.get_articles(v.title(), query))
             for article in articles:
                 partial_results.append(article)
                 partial_results_ids.add(article['article_id'])
@@ -45,7 +42,11 @@ def search(args):
     # Find intersections in the id lists to find only unique id's
     results_ids_intersect = find_intersect(possible_results_ids)
     # Use this intersection list to single out the unique articles
-    results = [res for res in possible_results if res['article_id'] in results_ids_intersect]
+    results = []
+    for res in possible_results:
+        if res['article_id'] in results_ids_intersect:
+            results_ids_intersect.remove(res['article_id'])
+            results.append(res)
     return results
 
 
@@ -60,7 +61,7 @@ def get_products():
     args = MultiDict(request.args)
     args.pop('offset', None)  # Remove offset if it is present
     if args:
-        results = search(args)
+        results = _search(args)
     else:
         results = db_interface.get_articles()
     encoded_url = request.url.replace(' ', '%20')  # Replace all spaces in the URL string (why are they even there?)
