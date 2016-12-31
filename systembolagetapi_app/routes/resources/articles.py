@@ -88,7 +88,6 @@ def get_products():
         if len(results[next_offset:]) == 0:
             next_url = None
         else:
-            print encoded_url
             next_url = re.sub(r'offset=\d+', 'offset=%s' % next_offset, encoded_url)
 
         if offset-PAGINATION_LIMIT <= 0:
@@ -143,7 +142,7 @@ def get_product(article_number):
             image_url = 'http:%s' % img.find('img')['src']
     matching_article['description'] = description
     matching_article['image_url'] = image_url
-    return jsonify({'articles': matching_article})
+    return jsonify({'article': matching_article})
 
 
 @app.route('/systembolaget/api/articles/departments', methods=['GET'])
