@@ -84,6 +84,43 @@ def _search(args):
 
 @app.route('/systembolaget/api/stores', methods=['GET'])
 def get_stores():
+    """
+    Get all stores
+    Query the API on stores based on a subset of their properties.
+    The API returns maximally 20 stores at a time, hence the offset parameter and 'next' field of the meta object.
+    ---
+    tags:
+        -   stores
+    parameters:
+        -   name: search_words
+            in: query
+            type: string
+            description: Search words such as nickname, location, etc, of store.
+        -   name: open
+            in: query
+            type: boolean
+            description: Check current time against store opening hours.
+        -   name: type
+            in: query
+            type: string
+            description: Type of store, i.e. "Butik", "Ombud", etc.
+        -   name: services
+            in: query
+            type: string
+            description: Special services provided by stores. Currently the only special service provided is 'Dryckesprovning'.
+        -   name: offset
+            in: query
+            type: integer
+            description: Offset the results.
+    responses:
+        200:
+            description: Sends all stores specified by the union of the queries.
+            schema:
+                title: stores
+                type: array
+                items:
+                    $ref: '#/definitions/get_store_get_Store'
+    """
     # TODO: Search on GPS coordinates? I.e. all stores within a rectangle
     offset = int(request.args.get('offset', 0))
     if offset < 0 or not isinstance(offset, int) or isinstance(offset, bool):  # isinstance(True, int) == True...
@@ -130,6 +167,65 @@ def get_stores():
 @app.route('/systembolaget/api/stores/<string:store_id>', methods=['GET'])
 @cache.cached(timeout=CACHE_TIMEOUT)
 def get_store(store_id):
+    """
+    Get a specific store
+    ---
+    tags:
+        -   stores
+    parameters:
+        -   name: store_id
+            in: path
+            type: string
+            description: The ID of a specific store.
+            required: True
+    responses:
+        200:
+            description: Sends the store with the specified store ID.
+            schema:
+                id: Store
+                type: object
+                properties:
+                    address:
+                        type: string
+                        description: Street address
+                    address2:
+                        type: string
+                        description: Unclear..
+                    address3:
+                        type: string
+                        description: Postal code
+                    address4:
+                        type: string
+                        description: City
+                    address5:
+                        type: string
+                        description: Region
+                    hours_open:
+                        type: string
+                        description: String representation of a list of start/end objects for one week. Will become a proper list at some point.
+                    name:
+                        type: string
+                        description: Nickname of the store
+                    phone:
+                        type: string
+                    rt90x:
+                        type: string
+                    rt90y:
+                        type: string
+                    search_words:
+                        type: string
+                        description: Semicolon-separated string of words associated with the store. Will become a proper list at some point
+                    services:
+                        type: string
+                        description: A description of special services provided at this store, if any.
+                    store_id:
+                        type: string
+                    type:
+                        type: string
+                        description: Type of the store, i.e. "Butik", "Ombud"
+                    uri:
+                        type: string
+    """
     matching_store = db_interface.get_stores(store_id)
     if not matching_store:
         abort(404)

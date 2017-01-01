@@ -52,7 +52,86 @@ def _search(args):
 
 @app.route('/systembolaget/api/articles', methods=['GET'])
 #@cache.cached(timeout=CACHE_TIMEOUT)
-def get_products():
+def get_articles():
+    """
+    Get all articles
+    Query the API on articles based on a subset of their properties.
+    The API returns maximally 20 articles at a time, hence the offset parameter and 'next' field of the meta object.
+    ---
+    tags:
+        -   articles
+    parameters:
+        -   name: abv
+            in: query
+            description: Alcohol by volume
+            type: integer
+            format: float32
+        -   name: article_department
+            in: query
+            description: Article department (Öl, Vitt vin, etc)
+            type: string
+        -   name: assortment
+            in: query
+            description: Store assortment (FS, BS, etc)
+            type: string
+        -   name: ecological
+            in: query
+            description:  Article is ecological/green
+            type: boolean
+        -   name: ethical
+            in: query
+            description:  Article has been produced ethically
+            type: boolean
+        -   name: kosher
+            in: query
+            description:  Article is kosher
+            type: boolean
+        -   name: name
+            in: query
+            description: The article name
+            type: string
+        -   name: origin_country
+            in: query
+            description: Country of origin
+            type: string
+        -   name: origin
+            in: query
+            description: Region of origin. Usually only exists for wines.
+            type: string
+        -   name: packaging
+            in: query
+            description: The article packaging. Useful for differentiating boxed wines versus bottled, or beer in cans/kegs/bottles.
+            type: string
+        -   name: producer
+            in: query
+            description: The producer of the article.
+            type: string
+        -   name: supplier
+            in: query
+            description: The supplier of the article.
+            type: string
+        -   name: volume_ml
+            in: query
+            type: integer
+            format: float32
+            description: Volume of the packaging in milliliters. Useful for differentiating large versus small bottles.
+        -   name: year
+            in: query
+            type: string
+            description: The year (i.e. vintage) of the article.
+        -   name: offset
+            in: query
+            type: integer
+            description: Offset the results.
+    responses:
+        200:
+            description:  Sends all articles specified by the union of the queries
+            schema:
+                title: articles
+                type: array
+                items:
+                    $ref: '#/definitions/get_article_get_Article'
+    """
     offset = int(request.args.get('offset', 0))
     if offset < 0 or not isinstance(offset, int) or isinstance(offset, bool):  # isinstance(True, int) == True...
         abort(400)
@@ -108,7 +187,93 @@ def get_products():
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
 @cache.cached(timeout=CACHE_TIMEOUT)
-def get_product(article_number):
+def get_article(article_number):
+    """
+        Get a specific article
+        Some articles have different numbers based on their packaging, prefixed with their article ID.
+        For example, Heineken has article ID 1536. /articles/1536 gives the first matching article with that ID, in this
+        case 153603 - Heineken on a 330ml bottle. /articles/153612, however, returns Heineken on a 330ml can.
+        ---
+        tags:
+            - articles
+        parameters:
+            -   name: article_number
+                in: path
+                type: string
+                description: Article ID or article number.
+                required: true
+        responses:
+            200:
+                description: Sends the article with the article ID or number
+                schema:
+                    id: Article
+                    type: object
+                    properties:
+                        abv:
+                            type: integer
+                            format: float32
+                        article_department:
+                            type: string
+                        article_id:
+                            type: string
+                        article_number:
+                            type: string
+                        assortment:
+                            type: string
+                        delivery_end:
+                            type: string
+                        ecological:
+                            type: boolean
+                        ethical:
+                            type: boolean
+                        internal_article_id:
+                            type: string
+                        kosher:
+                            type: boolean
+                        name:
+                            type: string
+                        name2:
+                            type: string
+                        obsolete:
+                            type: boolean
+                        origin:
+                            type: string
+                        origin_country:
+                            type: string
+                        packaging:
+                            type: string
+                        price_incl_vat:
+                            type: integer
+                            format: float32
+                        price_per_liter:
+                            type: integer
+                            format: float32
+                        producer:
+                            type: string
+                        raw_materials:
+                            type: string
+                        recycle_value:
+                            type: string
+                        sale_start:
+                            type: string
+                        sb_url:
+                            type: string
+                        seal:
+                            type: string
+                        supplier:
+                            type: string
+                        type:
+                            type: string
+                        uri:
+                            type: string
+                        volume_ml:
+                            type: integer
+                            format: integer32
+                        year:
+                            type: string
+                        year_tested:
+                            type: string
+    """
     matching_articles = db_interface.get_articles(article_number)
     if not matching_articles:
         matching_articles = db_interface.get_articles(article_number, 'article_number')
@@ -147,6 +312,20 @@ def get_product(article_number):
 
 @app.route('/systembolaget/api/articles/departments', methods=['GET'])
 def get_departments():
+    """
+    Get all possible article departments
+    ---
+    tags:
+        -   articles
+    responses:
+        200:
+            description: List of all available article departments
+            schema:
+                type: array
+                items:
+                    type: string
+
+    """
     depts_set = set()
     depts = []
     articles = db_interface.get_articles()
