@@ -88,6 +88,9 @@ def get_stores():
     Get all stores
     Query the API on stores based on a subset of their properties.
     The API returns maximally 20 stores at a time, hence the offset parameter and 'next' field of the meta object.
+
+    **Note:** The hours_open property is actually a list of start/end objects, not string. Likewise, the search_words
+     property is a list of strings.
     ---
     tags:
         -   stores
@@ -169,6 +172,8 @@ def get_stores():
 def get_store(store_id):
     """
     Get a specific store
+    **Note:** The hours_open is actually a list of start/end objects, not string. Likewise, the search_words
+     property is a list of strings.
     ---
     tags:
         -   stores
@@ -190,7 +195,7 @@ def get_store(store_id):
                         description: Street address
                     address2:
                         type: string
-                        description: Unclear..
+                        description: Unclear...
                     address3:
                         type: string
                         description: Postal code
@@ -202,7 +207,7 @@ def get_store(store_id):
                         description: Region
                     hours_open:
                         type: string
-                        description: String representation of a list of start/end objects for one week. Will become a proper list at some point.
+                        description: List of start/end objects for one week
                     name:
                         type: string
                         description: Nickname of the store
@@ -214,10 +219,10 @@ def get_store(store_id):
                         type: string
                     search_words:
                         type: string
-                        description: Semicolon-separated string of words associated with the store. Will become a proper list at some point
+                        description: List of search-word strings
                     services:
                         type: string
-                        description: A description of special services provided at this store, if any.
+                        description: A description of special services provided at this store, if any
                     store_id:
                         type: string
                     type:

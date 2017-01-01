@@ -96,33 +96,33 @@ def get_articles():
             type: string
         -   name: origin
             in: query
-            description: Region of origin. Usually only exists for wines.
+            description: Region of origin. Usually only exists for wines
             type: string
         -   name: packaging
             in: query
-            description: The article packaging. Useful for differentiating boxed wines versus bottled, or beer in cans/kegs/bottles.
+            description: The article packaging. Useful for differentiating boxed wines versus bottled, or beer in cans/kegs/bottles
             type: string
         -   name: producer
             in: query
-            description: The producer of the article.
+            description: The producer of the article
             type: string
         -   name: supplier
             in: query
-            description: The supplier of the article.
+            description: The supplier of the article
             type: string
         -   name: volume_ml
             in: query
             type: integer
             format: float32
-            description: Volume of the packaging in milliliters. Useful for differentiating large versus small bottles.
+            description: Volume of the packaging in milliliters. Useful for differentiating large versus small bottles
         -   name: year
             in: query
             type: string
-            description: The year (i.e. vintage) of the article.
+            description: The year (i.e. vintage) of the article
         -   name: offset
             in: query
             type: integer
-            description: Offset the results.
+            description: Offset the results
     responses:
         200:
             description:  Sends all articles specified by the union of the queries

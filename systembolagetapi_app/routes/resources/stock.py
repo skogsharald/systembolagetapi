@@ -4,13 +4,14 @@ from systembolagetapi_app import app, cache
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 import systembolagetapi_app.db_interface as db_interface
 import re
+import ast
 
 
 @app.route('/systembolaget/api/stock', methods=['GET'])
 def get_stock():
     """
     Get the stock of all stores
-    For all stores, returns a string representation of a list of all article numbers the store keeps in stock,
+    For all stores, returns a list of all article numbers the store keeps in stock,
     together with the store ID of the store.
     The API returns maximally 20 stores at a time, hence the offset parameter and 'next' field of the meta object.
     ---
@@ -20,7 +21,7 @@ def get_stock():
         -   name: offset
             in: query
             type: integer
-            description: Offset the results.
+            description: Offset the results
     responses:
         200:
             description: Sends the stock of all stores.
@@ -69,7 +70,7 @@ def get_stock():
 def get_store_stock(store_id):
     """
     Get the stock of a specific store
-    Returns a string representation of a list of all article numbers this store keeps in stock, together with the
+    Returns a list of all article numbers this store keeps in stock, together with the
     store ID of this store.
     ---
     tags:
@@ -91,7 +92,6 @@ def get_store_stock(store_id):
                         type: string
                     article_number:
                         type: string
-                        description: Currently a string represenation of a list. Will become a proper list.
     """
     matching_store = db_interface.get_stock(store_id)
     if not matching_store:

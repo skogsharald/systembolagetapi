@@ -5,6 +5,7 @@ from psycopg2.extras import RealDictCursor
 import urlparse
 import json
 import traceback
+import ast
 
 urlparse.uses_netloc.append("postgres")
 url = urlparse.urlparse(os.environ["DATABASE_URL"])
@@ -124,8 +125,18 @@ def get_stores(store_id=None, col='store_id'):
         else:
             query = u"SELECT * FROM stores"
         cur.execute(query)
-        res = cur.fetchall()
-
+        db_res = cur.fetchall()
+        for result in db_res:
+            tmp_res = {k: v for k, v in result.iteritems()}
+            if result['hours_open']:
+                store_list = ast.literal_eval(result['hours_open'])
+                if not isinstance(store_list, list):
+                    raise ValueError
+                tmp_res['hours_open'] = store_list
+            if result['search_words']:
+                search_words = result['search_words'].split(';')
+                tmp_res['search_words'] = search_words
+            res.append(tmp_res)
     except Exception:
         if cur is not None and conn is not None:
             conn.rollback()
@@ -152,7 +163,18 @@ def get_stores_search_words(q):
         cur = conn.cursor(cursor_factory=RealDictCursor)
         query = u"SELECT * FROM stores where search_words like '%{0}%' escape '='".format(q)
         cur.execute(query)
-        res = cur.fetchall()
+        db_res = cur.fetchall()
+        for result in db_res:
+            tmp_res = {k: v for k, v in result.iteritems()}
+            if result['hours_open']:
+                store_list = ast.literal_eval(result['hours_open'])
+                if not isinstance(store_list, list):
+                    raise ValueError
+                tmp_res['hours_open'] = store_list
+            if result['search_words']:
+                search_words = result['search_words'].split(';')
+                tmp_res['search_words'] = search_words
+            res.append(tmp_res)
 
     except Exception:
         if cur is not None and conn is not None:
@@ -183,7 +205,14 @@ def get_stock(store_id=None):
         else:
             query = u"SELECT * FROM stock"
         cur.execute(query)
-        res = cur.fetchall()
+        db_res = cur.fetchall()
+        for result in db_res:
+            tmp_res = {'article_number': result['store_id']}
+            store_list = ast.literal_eval(result['article_number'])
+            if not isinstance(store_list, list):
+                raise ValueError
+            tmp_res['article_number'] = store_list
+            res.append(tmp_res)
 
     except Exception:
         if cur is not None and conn is not None:
