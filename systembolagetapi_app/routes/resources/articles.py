@@ -335,4 +335,4 @@ def get_departments():
             depts_set.add(article['article_department'])
     if not depts:
         abort(404)
-    return jsonify({'departments': list(depts_set)})
+    return jsonify({'departments': list(depts_set), 'meta': {'count': len(depts_set)}})
