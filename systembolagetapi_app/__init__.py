@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, jsonify
+from flask import Flask
 from flasgger import Swagger
 from flask.ext.cache import Cache
-import os
-import json
 
 app = Flask(__name__)
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})

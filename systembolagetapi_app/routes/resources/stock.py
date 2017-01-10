@@ -4,7 +4,6 @@ from systembolagetapi_app import app, cache
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 import systembolagetapi_app.db_interface as db_interface
 import re
-import ast
 
 
 @app.route('/systembolaget/api/stock', methods=['GET'])

@@ -7,7 +7,6 @@ import systembolagetapi_app.db_interface as db_interface
 from bs4 import BeautifulSoup
 import requests
 import re
-import json
 
 
 def find_intersect(lists):
@@ -184,7 +183,6 @@ def get_articles():
             'next': next_url,
             'previous': prev_url
             }
-    print json.dumps(meta)
     return jsonify({'articles': results[offset:next_offset], 'meta': meta})
 
 
