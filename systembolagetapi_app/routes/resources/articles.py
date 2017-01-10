@@ -141,6 +141,8 @@ def get_articles():
     args = MultiDict(request.args)
     args.pop('offset', None)  # Remove offset if it is present
     if args:
+        # Parse so origin_country=usa,italien works as well as origin_country=usa&origin_country=italien
+        args = MultiDict({k: sum([v.split(',') for v in request.args.getlist(k)], []) for k in request.args})
         results = _search(args)
     else:
         results = db_interface.get_articles()

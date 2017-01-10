@@ -133,6 +133,8 @@ def get_stores():
     args = MultiDict(request.args)
     args.pop('offset', None)  # Remove offset if it is present
     if args:
+        # Parse so origin_country=usa,italien works as well as origin_country=usa&origin_country=italien
+        args = MultiDict({k: sum([v.split(',') for v in request.args.getlist(k)], []) for k in request.args})
         stores = _search(args)
     else:
         stores = db_interface.get_stores()
