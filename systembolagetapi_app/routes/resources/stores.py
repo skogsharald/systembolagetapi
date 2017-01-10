@@ -161,8 +161,8 @@ def get_stores():
     meta = {'count': len(stores[offset:next_offset]),
             'offset': offset,
             'total_count': len(stores),
-            'next': next_url.encode('utf-8') if next_url is not None else next_url,
-            'previous': prev_url.encode('utf-8') if prev_url is not None else prev_url
+            'next': next_url,
+            'previous': prev_url
             }
     return jsonify({'stores': stores[offset:next_offset], 'meta': meta})
 

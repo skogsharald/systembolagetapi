@@ -7,6 +7,7 @@ import systembolagetapi_app.db_interface as db_interface
 from bs4 import BeautifulSoup
 import requests
 import re
+import json
 
 
 def find_intersect(lists):
@@ -31,6 +32,7 @@ def _search(args):
         for v in args.getlist(query):  # The different values for this query in the MultiDict
             articles = db_interface.get_articles(v, query)
             if isinstance(v, str) or isinstance(v, unicode):  # Also search with upper case and capitalized words
+
                 articles.extend(db_interface.get_articles(v.upper(), query))
                 articles.extend(db_interface.get_articles(v.title(), query))
             for article in articles:
@@ -179,9 +181,10 @@ def get_articles():
             'offset': offset,
             'total_count': len(results),
             'filters': dict(args),
-            'next': next_url.encode('utf-8') if next_url is not None else next_url,
-            'previous': prev_url.encode('utf-8') if prev_url is not None else prev_url
+            'next': next_url,
+            'previous': prev_url
             }
+    print json.dumps(meta)
     return jsonify({'articles': results[offset:next_offset], 'meta': meta})
 
 
