@@ -14,7 +14,7 @@ app.config['SWAGGER'] = {
     "title": "SystembolagetAPI",
     "headers": [
         ('Access-Control-Allow-Origin', '*'),
-        ('Access-Control-Allow-Methods', "GET, POST, PUT, DELETE, OPTIONS"),
+        ('Access-Control-Allow-Methods', "GET"),
         ('Access-Control-Allow-Credentials', "true"),
     ],
     "specs": [
