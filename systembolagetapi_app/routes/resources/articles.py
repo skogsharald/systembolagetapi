@@ -31,9 +31,9 @@ def _search(args):
         for v in args.getlist(query):  # The different values for this query in the MultiDict
             articles = db_interface.get_articles(v, query)
             if isinstance(v, str) or isinstance(v, unicode):  # Also search with upper case and capitalized words
-
                 articles.extend(db_interface.get_articles(v.upper(), query))
                 articles.extend(db_interface.get_articles(v.title(), query))
+                articles.extend(db_interface.get_articles(v.capitalize(), query))
             for article in articles:
                 partial_results.append(article)
                 partial_results_ids.add(article['article_id'])
@@ -51,8 +51,12 @@ def _search(args):
     return results
 
 
+def _cache_key():
+    return request.url.encode('utf-8')
+
+
 @app.route('/systembolaget/api/articles', methods=['GET'])
-#@cache.cached(timeout=CACHE_TIMEOUT)
+@cache.cached(timeout=CACHE_TIMEOUT, key_prefix=_cache_key)
 def get_articles():
     """
     Get all articles
@@ -142,7 +146,7 @@ def get_articles():
     args.pop('offset', None)  # Remove offset if it is present
     if args:
         # Parse so origin_country=usa,italien works as well as origin_country=usa&origin_country=italien
-        args = MultiDict({k: sum([v.split(',') for v in request.args.getlist(k)], []) for k in request.args})
+        # args = MultiDict({k: sum([v.split(',') for v in args.getlist(k)], []) for k in args})
         results = _search(args)
     else:
         results = db_interface.get_articles()
@@ -151,8 +155,8 @@ def get_articles():
         encoded_url = unicode(encoded_url.split('?')[0])
         encoded_args = []
         for key in args:
-            for value in args.getlist(key):
-                encoded_args.append('%s=%s' % (key, value))
+            for val in args.getlist(key):
+                encoded_args.append('%s=%s' % (key, val))
         encoded_url += '?%s' % '&'.join(encoded_args)
         if offset > 0:  # Also append the offset argument
             encoded_url += '&offset=%s' % offset
@@ -177,13 +181,13 @@ def get_articles():
             if prev_url == encoded_url:
                 prev_url = re.sub(r'\?offset=\d+', '', encoded_url)
         else:
-            prev_url = re.sub(r'&offset=\d+', '&offset=%s' % (offset-PAGINATION_LIMIT), encoded_url)
+            prev_url = re.sub(r'offset=\d+', 'offset=%s' % (offset-PAGINATION_LIMIT), encoded_url)
     meta = {'count': len(results[offset:next_offset]),
             'offset': offset,
             'total_count': len(results),
             'filters': dict(args),
-            'next': next_url,
-            'previous': prev_url
+            'next': unicode(next_url) if next_url else next_url,
+            'previous': unicode(prev_url) if prev_url else prev_url
             }
     return jsonify({'articles': results[offset:next_offset], 'meta': meta})
 
@@ -314,6 +318,7 @@ def get_article(article_number):
 
 
 @app.route('/systembolaget/api/articles/departments', methods=['GET'])
+@cache.cached(timeout=CACHE_TIMEOUT)
 def get_departments():
     """
     Get all possible article departments

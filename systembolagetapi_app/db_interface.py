@@ -91,7 +91,7 @@ def get_articles(value=None, col='article_id'):
             tmp_new = {}
             for k, v in r.iteritems():
                 if isinstance(v, str):
-                    tmp_new[k] = v.decode('utf-8')
+                    tmp_new[k] = unicode(v.decode('utf-8'))
                 else:
                     tmp_new[k] = v
             res.append(tmp_new)
@@ -127,19 +127,20 @@ def get_stores(store_id=None, col='store_id'):
         cur.execute(query)
         db_res = cur.fetchall()
         for result in db_res:
-            tmp_res = {k: v for k, v in result.iteritems()}
+            tmp_res = {k: unicode(v.decode('utf-8')) if v else v for k, v in result.iteritems()}
             if result['hours_open']:
                 store_list = ast.literal_eval(result['hours_open'])
                 if not isinstance(store_list, list):
                     raise ValueError
                 tmp_res['hours_open'] = store_list
             if result['search_words']:
-                search_words = result['search_words'].split(';')
+                search_words = tmp_res['search_words'].split(';')
                 tmp_res['search_words'] = search_words
             res.append(tmp_res)
     except Exception:
         if cur is not None and conn is not None:
             conn.rollback()
+        traceback.print_exc()
         raise  # Re-raise the last exception
     finally:
         if cur is not None and conn is not None:
@@ -165,20 +166,21 @@ def get_stores_search_words(q):
         cur.execute(query)
         db_res = cur.fetchall()
         for result in db_res:
-            tmp_res = {k: v for k, v in result.iteritems()}
+            tmp_res = {k: unicode(v.decode('utf-8')) if v else v for k, v in result.iteritems()}
             if result['hours_open']:
                 store_list = ast.literal_eval(result['hours_open'])
                 if not isinstance(store_list, list):
                     raise ValueError
                 tmp_res['hours_open'] = store_list
             if result['search_words']:
-                search_words = result['search_words'].split(';')
+                search_words = tmp_res['search_words'].split(';')
                 tmp_res['search_words'] = search_words
             res.append(tmp_res)
 
     except Exception:
         if cur is not None and conn is not None:
             conn.rollback()
+        traceback.print_exc()
         raise  # Re-raise the last exception
     finally:
         if cur is not None and conn is not None:
@@ -207,7 +209,7 @@ def get_stock(store_id=None):
         cur.execute(query)
         db_res = cur.fetchall()
         for result in db_res:
-            tmp_res = {'article_number': result['store_id']}
+            tmp_res = {'store_id': result['store_id']}
             store_list = ast.literal_eval(result['article_number'])
             if not isinstance(store_list, list):
                 raise ValueError

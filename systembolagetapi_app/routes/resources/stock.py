@@ -4,9 +4,11 @@ from systembolagetapi_app import app, cache
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 import systembolagetapi_app.db_interface as db_interface
 import re
+import traceback
 
 
 @app.route('/systembolaget/api/stock', methods=['GET'])
+@cache.cached(timeout=CACHE_TIMEOUT)
 def get_stock():
     """
     Get the stock of all stores
@@ -41,7 +43,7 @@ def get_stock():
         if len(stock[next_offset:]) == 0:
             next_url = None
         else:
-            next_url = '%s&offset=%s' % (encoded_url, next_offset)
+            next_url = '%s?offset=%s' % (encoded_url, next_offset)
         prev_url = None
     else:
         # Replace the offset value in the URL string
@@ -52,10 +54,11 @@ def get_stock():
 
         if offset-PAGINATION_LIMIT <= 0:
             prev_url = re.sub(r'&offset=\d+', '', encoded_url)
+            print prev_url, encoded_url
             if prev_url == encoded_url:
                 prev_url = re.sub(r'\?offset=\d+', '', encoded_url)
         else:
-            prev_url = re.sub(r'&offset=\d+', '&offset=%s' % (offset-PAGINATION_LIMIT), encoded_url)
+            prev_url = re.sub(r'offset=\d+', '&offset=%s' % (offset-PAGINATION_LIMIT), encoded_url)
     meta = {'count': len(stock[offset:next_offset]),
             'offset': offset,
             'total_count': len(stock),
@@ -66,6 +69,7 @@ def get_stock():
 
 
 @app.route('/systembolaget/api/stock/store/<string:store_id>', methods=['GET'])
+@cache.cached(timeout=CACHE_TIMEOUT)
 def get_store_stock(store_id):
     """
     Get the stock of a specific store
@@ -121,20 +125,24 @@ def get_product_stores(article_number):
                 items:
                     type: string
     """
-    store_list = []
-    stock = db_interface.get_stock()
-    suffices = db_interface.get_suffices()
-    suffix_set = set([s['suffix'] for s in suffices])
-    for store in stock:
-        if article_number in store['article_number']:
-            store_list.append(store['store_id'])
-    if not store_list:
-        # Search with all suffixes in suffix set, user put in the article ID, not a specific article number
-        for suffix in suffix_set:
-            for store in stock:
-                if article_number + suffix in store['article_number']:
-                    store_list.append(store['store_id'])
+    try:
+        store_list = []
+        stock = db_interface.get_stock()
+        suffices = db_interface.get_suffices()
+        suffix_set = set([s['suffix'] for s in suffices])
+        for store in stock:
+            if article_number in store['article_number']:
+                store_list.append(store['store_id'])
         if not store_list:
-            abort(404)
-    meta = {'count': len(store_list)}
+            # Search with all suffixes in suffix set, user put in the article ID, not a specific article number
+            for suffix in suffix_set:
+                for store in stock:
+                    if article_number + suffix in store['article_number']:
+                        store_list.append(store['store_id'])
+            if not store_list:
+                abort(404)
+        meta = {'count': len(store_list)}
+    except:
+        traceback.print_exc()
+        raise
     return jsonify({'stock': store_list, 'meta': meta})
