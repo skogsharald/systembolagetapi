@@ -33,9 +33,9 @@ def get_resources(args):
         print '---- RESETTING DATABASE AND UPDATING DATA ----'
         db_interface.reset_db()
 
-    #preprocess_products(lower_keys(func(PRODUCT_PATH if args.test else PRODUCT_URL)))
+    preprocess_products(lower_keys(func(PRODUCT_PATH if args.test else PRODUCT_URL)))
     preprocess_stores(lower_keys(func(STORE_PATH if args.test else STORE_URL)))
-    #preprocess_store_products(lower_keys(func(STORE_PRODUCT_PATH if args.test else STORE_PRODUCT_URL)))
+    preprocess_store_products(lower_keys(func(STORE_PRODUCT_PATH if args.test else STORE_PRODUCT_URL)))
 
 
 def lower_keys(x):
