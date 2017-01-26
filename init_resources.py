@@ -98,7 +98,7 @@ def preprocess_article(article):
     temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
                                               ARTICLE_URI_KEY[temp_article['article_department'].lower()],
                                               '-'.join(internationalize(temp_article['name']).replace('\'', '')
-                                                       .lower().split()),
+                                                       .replace('/', '').lower().split()),
                                               temp_article['article_number'])
     db_interface.insert_item(temp_article, 'articles')  # Insert this item into database
     db_interface.insert_item({'suffix': temp_article['article_number'][-2:],
