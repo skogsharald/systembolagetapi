@@ -52,6 +52,7 @@ ARTICLE_URI_KEY = {
     u'öl': 'ol',
     u'genever': 'sprit',
     u'sprit av frukt': 'sprit',
+    u'snaps': 'sprit',
     u'cognac': 'sprit',
     u'madeira': 'aperitif-dessert',
     u'smaksatt vin': 'aperitif-dessert',
