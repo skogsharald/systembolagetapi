@@ -58,5 +58,6 @@ ARTICLE_URI_KEY = {
     u'smaksatt vin': 'aperitif-dessert',
     u'likör, choklad-, kaffe- och nötter': 'sprit',
     u'övrig sprit': 'sprit',
-    u'glögg och glühwein': 'aperitif-dessert'
+    u'glögg och glühwein': 'aperitif-dessert',
+    u'blå mousserande': 'mousserande-viner'
 }
