@@ -105,11 +105,13 @@ def preprocess_article(article):
     except KeyError:
         print 'Error: Could not find article URI for article department %s.' % temp_article['article_department']
         print 'Article: %s.' & temp_article['name']
+        print 'Article was NOT inserted into database.'
         traceback.print_exc()
-    db_interface.insert_item(temp_article, 'articles')  # Insert this item into database
-    db_interface.insert_item({'suffix': temp_article['article_number'][-2:],
-                              'packaging': temp_article['packaging']},
-                             'suffices')  # Insert this suffix into database, if it does not already exist
+    else:
+        db_interface.insert_item(temp_article, 'articles')  # Insert this item into database
+        db_interface.insert_item({'suffix': temp_article['article_number'][-2:],
+                                  'packaging': temp_article['packaging']},
+                                 'suffices')  # Insert this suffix into database, if it does not already exist
 
 
 def preprocess_store(store):
