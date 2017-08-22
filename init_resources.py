@@ -8,6 +8,7 @@ from systembolagetapi_app.config import PRODUCT_URL, STORE_URL, STORE_PRODUCT_UR
     ARTICLE_URI_KEY, PRODUCT_PATH, STORE_PATH, STORE_PRODUCT_PATH
 from systembolagetapi_app import db_interface
 from xmldictconfig import XmlDictConfig
+import traceback
 
 hours_string_pattern = re.compile('\d{4}-\d{2}-\d{2};\d{2}:\d{2};\d{2}:\d{2}')
 
@@ -95,11 +96,16 @@ def preprocess_article(article):
         'ethical': article.get('etiskt') == '1',
         'obsolete': article.get('utgått') == '1'
     }
-    temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
-                                              ARTICLE_URI_KEY[temp_article['article_department'].lower()],
-                                              '-'.join(internationalize(temp_article['name']).replace('\'', '')
-                                                       .replace('/', '').lower().split()),
-                                              temp_article['article_number'])
+    try:
+        temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
+                                                  ARTICLE_URI_KEY[temp_article['article_department'].lower()],
+                                                  '-'.join(internationalize(temp_article['name']).replace('\'', '')
+                                                           .replace('/', '').lower().split()),
+                                                  temp_article['article_number'])
+    except KeyError:
+        print 'Error: Could not find article URI for article department %s.' % temp_article['article_department']
+        print 'Article: %s.' & temp_article['name']
+        traceback.print_exc()
     db_interface.insert_item(temp_article, 'articles')  # Insert this item into database
     db_interface.insert_item({'suffix': temp_article['article_number'][-2:],
                               'packaging': temp_article['packaging']},
