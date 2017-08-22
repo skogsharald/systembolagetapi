@@ -59,5 +59,6 @@ ARTICLE_URI_KEY = {
     u'likör, choklad-, kaffe- och nötter': 'sprit',
     u'övrig sprit': 'sprit',
     u'glögg och glühwein': 'aperitif-dessert',
-    u'blå mousserande': 'mousserande-viner'
+    u'blå mousserande': 'mousserande-viner',
+    u'blå stilla': 'apetirif-dessert'
 }
