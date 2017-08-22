@@ -103,8 +103,8 @@ def preprocess_article(article):
                                                            .replace('/', '').lower().split()),
                                                   temp_article['article_number'])
     except KeyError:
-        print 'Error: Could not find article URI for article department %s.' % temp_article['article_department']
-        print 'Article: %s.' & temp_article['name']
+        print 'Error: Could not find article URI for article department: %s.' % temp_article['article_department']
+        print 'Article: %s.' % temp_article['name']
         print 'Article was NOT inserted into database.'
         traceback.print_exc()
     else:
