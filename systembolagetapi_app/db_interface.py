@@ -8,7 +8,10 @@ import traceback
 import ast
 
 urlparse.uses_netloc.append("postgres")
-url = urlparse.urlparse(os.environ["DATABASE_URL"])
+try:
+    url = urlparse.urlparse(os.environ["DATABASE_URL"])
+except KeyError:
+    url = urlparse.urlparse('postgres://ludvig@localhost:5432/test')  # Local for testing
 
 
 def reset_db():
