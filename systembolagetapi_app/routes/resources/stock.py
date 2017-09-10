@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from flask import jsonify, abort, request
 from systembolagetapi_app import app, cache
+from werkzeug.datastructures import MultiDict
+from utils import find_intersect
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 import systembolagetapi_app.db_interface as db_interface
 import re
@@ -102,6 +104,10 @@ def get_store_stock(store_id):
     return jsonify({'stock': matching_store[0]})
 
 
+def _cache_key():
+    return request.url.encode('utf-8')
+
+
 @app.route('/systembolaget/api/stock/article/<string:article_number>', methods=['GET'])
 @cache.cached(timeout=CACHE_TIMEOUT)
 def get_product_stores(article_number):
@@ -125,10 +131,57 @@ def get_product_stores(article_number):
                 items:
                     type: string
     """
+    store_list = _find_store_with_article(article_number, db_interface.get_stock(), db_interface.get_suffices())
+    meta = {'count': len(store_list)}
+    return jsonify({'stock': store_list, 'meta': meta})
+
+
+@app.route('/systembolaget/api/stock/articles', methods=['GET'])
+@cache.cached(timeout=CACHE_TIMEOUT, key_prefix=_cache_key)
+def get_products_stores():
+    """
+    Get the stores which keep a all articles in the GET string in stock
+    Returns a list of store ID's.
+    ---
+    tags:
+        -   stock
+    parameters:
+        -   name: article_number
+            in: path
+            type: string
+            description: ID or number of an article.
+            required: True
+    responses:
+        200:
+            description: Sends an array of store ID's with all article ID's or numbers in stock.
+            schema:
+                type: array
+                items:
+                    type: string
+    """
+    if not request.args:
+        abort(400)  # Need at least one article ID/number!
+    args = MultiDict(request.args)
+    article_nums = args.getlist('article_number')
+    if not len(article_nums):
+        abort(400)  # Same as above
+    stores = []
+    stock = db_interface.get_stock()
+    suffices = db_interface.get_suffices()
+    for article_num in article_nums:
+        result_set = set()
+        possible_results = _find_store_with_article(article_num, stock, suffices)
+        for store_id in possible_results:
+            result_set.add(store_id)
+        stores.append(result_set)
+    final_res = find_intersect(stores)
+    meta = {'count': len(final_res)}
+    return jsonify({'stock': list(final_res), 'meta': meta})
+
+
+def _find_store_with_article(article_number, stock, suffices):
     try:
         store_list = []
-        stock = db_interface.get_stock()
-        suffices = db_interface.get_suffices()
         suffix_set = set([s['suffix'] for s in suffices])
         for store in stock:
             if article_number in store['article_number']:
@@ -141,8 +194,8 @@ def get_product_stores(article_number):
                         store_list.append(store['store_id'])
             if not store_list:
                 abort(404)
-        meta = {'count': len(store_list)}
+        return store_list
+
     except:
         traceback.print_exc()
         raise
-    return jsonify({'stock': store_list, 'meta': meta})

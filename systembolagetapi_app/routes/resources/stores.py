@@ -3,6 +3,7 @@ from flask import jsonify, abort, request
 from systembolagetapi_app import app, cache
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 from werkzeug.datastructures import MultiDict
+from utils import find_intersect
 import datetime
 import systembolagetapi_app.db_interface as db_interface
 import re
@@ -11,19 +12,6 @@ import json
 import traceback
 
 DATE_FORMAT = '%Y-%m-%d %H:%M'
-
-
-def find_intersect(lists):
-    """
-    Finds the intersection of multiple lists.
-    :param lists: list of the type [[1,3,4],[1,2,3],[1,3,5]].
-    :return: The intersection of lists (e.g. [1,3])
-    """
-    sets = iter(lists)
-    result = next(sets)
-    for s in sets:
-        result = result.intersection(s)
-    return result
 
 
 def _search(args):
