@@ -140,7 +140,7 @@ def get_product_stores(article_number):
 @cache.cached(timeout=CACHE_TIMEOUT, key_prefix=_cache_key)
 def get_products_stores():
     """
-    Get the stores which keep a all articles in the GET string in stock
+    Get the stores which keep all articles in the GET string in stock
     Returns a list of store ID's.
     ---
     tags:
