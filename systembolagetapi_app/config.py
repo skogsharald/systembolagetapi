@@ -61,5 +61,8 @@ ARTICLE_URI_KEY = {
     u'glögg och glühwein': 'aperitif-dessert',
     u'blå mousserande': 'mousserande-viner',
     u'blå stilla': 'apetirif-dessert',
-    u'juldrycker': 'apetirif-dessert'
+    u'juldrycker': 'apetirif-dessert',
+    u'akvavit och kryddat brännvin': 'sprit',
+    u'anissprit': 'sprit',
+    u'vodka och brännvin': 'sprit'
 }
