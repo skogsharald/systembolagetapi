@@ -64,5 +64,6 @@ ARTICLE_URI_KEY = {
     u'juldrycker': 'apetirif-dessert',
     u'akvavit och kryddat brännvin': 'sprit',
     u'anissprit': 'sprit',
-    u'vodka och brännvin': 'sprit'
+    u'vodka och brännvin': 'sprit',
+    u'frukt och druvsprit': 'sprit'
 }
