@@ -66,5 +66,7 @@ ARTICLE_URI_KEY = {
     u'anissprit': 'sprit',
     u'vodka och brännvin': 'sprit',
     u'frukt och druvsprit': 'sprit',
-    u'sprit av flera typer': 'sprit'
+    u'sprit av flera typer': 'sprit',
+    u'gin och genever': 'sprit',
+    u'armagnac och brandy': 'sprit'
 }
