@@ -60,8 +60,8 @@ ARTICLE_URI_KEY = {
     u'övrig sprit': 'sprit',
     u'glögg och glühwein': 'aperitif-dessert',
     u'blå mousserande': 'mousserande-viner',
-    u'blå stilla': 'apetirif-dessert',
-    u'juldrycker': 'apetirif-dessert',
+    u'blå stilla': 'aperitif-dessert',
+    u'juldrycker': 'aperitif-dessert',
     u'akvavit och kryddat brännvin': 'sprit',
     u'anissprit': 'sprit',
     u'vodka och brännvin': 'sprit',
@@ -69,5 +69,7 @@ ARTICLE_URI_KEY = {
     u'sprit av flera typer': 'sprit',
     u'gin och genever': 'sprit',
     u'armagnac och brandy': 'sprit',
-    u'presentförpackningar': 'presentartiklar'
+    u'presentförpackningar': 'presentartiklar',
+    u'tillbehör': 'presentartiklar',
+    u'aperitif & dessert': 'aperitif-dessert'
 }
