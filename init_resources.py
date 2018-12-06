@@ -107,6 +107,10 @@ def preprocess_article(article):
         print 'Article: %s.' % temp_article['name']
         print 'Article was NOT inserted into database.'
         traceback.print_exc()
+    except AttributeError:
+        print 'Error: Could not find article URI for article department: %s.' % temp_article['article_department']
+        print 'Article: %s.' % temp_article['name']
+        print 'Article was NOT inserted into database.'
     else:
         db_interface.insert_item(temp_article, 'articles')  # Insert this item into database
         db_interface.insert_item({'suffix': temp_article['article_number'][-2:],
