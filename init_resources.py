@@ -98,11 +98,11 @@ def preprocess_article(article):
     }
     try:
         temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
-                                                  ARTICLE_URI_KEY[temp_article['article_department'].lower()],
+                                                  ARTICLE_URI_KEY[temp_article.get('article_department', 'vara').lower()],
                                                   '-'.join(internationalize(temp_article['name']).replace('\'', '')
                                                            .replace('/', '').replace(':', '').lower().split()),
                                                   temp_article['article_number'])
-    except KeyError, AttributeError:
+    except KeyError:
         print 'Error: Could not find article URI for article department: %s.' % temp_article['article_department']
         print 'Article: %s.' % temp_article['name']
         print 'Article was NOT inserted into database.'
