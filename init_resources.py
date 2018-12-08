@@ -98,15 +98,27 @@ def preprocess_article(article):
     }
     try:
         temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
-                                                  ARTICLE_URI_KEY[temp_article.get('article_department', 'vara').lower()],
+                                                  ARTICLE_URI_KEY[temp_article['article_department'].lower()],
                                                   '-'.join(internationalize(temp_article['name']).replace('\'', '')
                                                            .replace('/', '').replace(':', '').lower().split()),
                                                   temp_article['article_number'])
-    except KeyError:
+    except KeyError, AttributeError:
         print 'Error: Could not find article URI for article department: %s.' % temp_article['article_department']
         print 'Article: %s.' % temp_article['name']
         print 'Article was NOT inserted into database.'
         traceback.print_exc()
+    except AttributeError:
+        try:
+            temp_article['sb_url'] = '%s/%s/%s-%s' % (SB_ARTICLE_BASE_URL,
+                'vara',  # <--- Some articles don't have a department, and simply have "vara" in their url
+                '-'.join(internationalize(temp_article['name']).replace('\'', '')
+                    .replace('/', '').replace(':', '').lower().split()),
+                temp_article['article_number'])
+        except:
+            print 'Error: Could not find article URL.'
+            print 'Article: %s.' % temp_article['name']
+            print 'Article was NOT inserted into database.'
+            traceback.print_exc()
     else:
         db_interface.insert_item(temp_article, 'articles')  # Insert this item into database
         db_interface.insert_item({'suffix': temp_article['article_number'][-2:],
