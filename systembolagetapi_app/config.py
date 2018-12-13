@@ -71,5 +71,6 @@ ARTICLE_URI_KEY = {
     u'armagnac och brandy': 'sprit',
     u'presentförpackningar': 'presentartiklar',
     u'tillbehör': 'presentartiklar',
-    u'aperitif & dessert': 'aperitif-dessert'
+    u'aperitif & dessert': 'aperitif-dessert',
+    u'aperitif och dessert': 'aperitif-dessert'
 }
