@@ -48,4 +48,5 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Methods', "GET")
     response.headers.add('Access-Control-Max-Age', 60 * 60 * 24 * 20)
+    response.headers["Content-Type"] = "application/json; charset=utf-8"
     return response
