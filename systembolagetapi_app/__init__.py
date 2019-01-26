@@ -45,7 +45,7 @@ from systembolagetapi_app.routes.handlers import errors
 
 @app.after_request
 def after_request(response):
-    if 'docs' not in response.host_url:
+    if 'docs' not in response.path:
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Methods', "GET")
         response.headers.add('Access-Control-Max-Age', 60 * 60 * 24 * 20)
