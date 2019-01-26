@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, abort, request
+from flask import jsonify, abort, request, Response
 from systembolagetapi_app import app, cache
 from werkzeug.datastructures import MultiDict
 from utils import find_intersect
@@ -7,6 +7,8 @@ from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 import systembolagetapi_app.db_interface as db_interface
 from bs4 import BeautifulSoup
 import requests
+import json
+import traceback
 import re
 
 
@@ -177,7 +179,8 @@ def get_articles():
             'next': unicode(next_url) if next_url else next_url,
             'previous': unicode(prev_url) if prev_url else prev_url
             }
-    return jsonify({'articles': results[offset:next_offset], 'meta': meta})
+    resp = Response(json.dumps({'articles': results[offset:next_offset], 'meta': meta}, indent=4), content_type='application/json; charset=utf8')
+    return resp
 
 
 @app.route('/systembolaget/api/articles/<string:article_number>', methods=['GET'])
@@ -307,7 +310,8 @@ def get_article(article_number):
 
     matching_article['description'] = description
     matching_article['image_url'] = image_url
-    return jsonify({'article': matching_article})
+    resp = Response(json.dumps({'article': matching_article}, indent=4), content_type='application/json; charset=utf8')
+    return resp
 
 
 @app.route('/systembolaget/api/articles/departments', methods=['GET'])
@@ -336,4 +340,5 @@ def get_departments():
             depts_set.add(article['article_department'])
     if not depts:
         abort(404)
-    return jsonify({'departments': list(depts_set), 'meta': {'count': len(depts_set)}})
+    resp = Response(json.dumps({'departments': list(depts_set), 'meta': {'count': len(depts_set)}}, indent=4), content_type='application/json; charset=utf8')
+    return resp

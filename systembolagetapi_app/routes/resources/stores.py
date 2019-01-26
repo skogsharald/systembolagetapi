@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, abort, request
+from flask import jsonify, abort, request, Response
 from systembolagetapi_app import app, cache
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 from werkzeug.datastructures import MultiDict
@@ -175,7 +175,8 @@ def get_stores():
             'previous': unicode(prev_url) if prev_url else None
             }
 
-    return jsonify({'stores': stores[offset:next_offset], 'meta': meta})
+    resp = Response(json.dumps({'stores': stores[offset:next_offset], 'meta': meta}, indent=4), content_type='application/json; charset=utf8')
+    return resp
 
 
 @app.route('/systembolaget/api/stores/<string:store_id>', methods=['GET'])
@@ -245,4 +246,5 @@ def get_store(store_id):
     matching_store = db_interface.get_stores(store_id)
     if not matching_store:
         abort(404)
-    return jsonify({'store': matching_store[0]})
+    resp = Response(json.dumps({'store': matching_store[0]}, indent=4), content_type='application/json; charset=utf8')
+    return resp

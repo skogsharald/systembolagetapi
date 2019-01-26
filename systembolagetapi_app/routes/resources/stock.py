@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from flask import jsonify, abort, request
+from flask import jsonify, abort, request, Response
 from systembolagetapi_app import app, cache
 from werkzeug.datastructures import MultiDict
 from utils import find_intersect
 from systembolagetapi_app.config import PAGINATION_LIMIT, CACHE_TIMEOUT
 import systembolagetapi_app.db_interface as db_interface
 import re
+import json
 import traceback
 
 
@@ -67,7 +68,8 @@ def get_stock():
             'next': next_url,
             'previous': prev_url
             }
-    return jsonify({'stock': stock[offset:next_offset], 'meta': meta})
+    resp = Response(json.dumps({'stock': stock[offset:next_offset], 'meta': meta}, indent=4), content_type='application/json; charset=utf8')
+    return resp
 
 
 @app.route('/systembolaget/api/stock/store/<string:store_id>', methods=['GET'])
@@ -101,7 +103,8 @@ def get_store_stock(store_id):
     matching_store = db_interface.get_stock(store_id)
     if not matching_store:
         abort(404)
-    return jsonify({'stock': matching_store[0]})
+    resp = Response(json.dumps({'stock': matching_store[0]}, indent=4), content_type='application/json; charset=utf8')
+    return resp
 
 
 def _cache_key():
@@ -133,7 +136,8 @@ def get_product_stores(article_number):
     """
     store_list = _find_store_with_article(article_number, db_interface.get_stock(), db_interface.get_suffices())
     meta = {'count': len(store_list)}
-    return jsonify({'stock': store_list, 'meta': meta})
+    resp = Response(json.dumps({'stock': store_list, 'meta': meta}, indent=4), content_type='application/json; charset=utf8')
+    return resp
 
 
 @app.route('/systembolaget/api/stock/articles', methods=['GET'])
@@ -176,7 +180,8 @@ def get_products_stores():
         stores.append(result_set)
     final_res = find_intersect(stores)
     meta = {'count': len(final_res)}
-    return jsonify({'stock': list(final_res), 'meta': meta})
+    resp = Response(json.dumps({'stock': list(final_res), 'meta': meta}, indent=4), content_type='application/json; charset=utf8')
+    return resp
 
 
 def _find_store_with_article(article_number, stock, suffices):
