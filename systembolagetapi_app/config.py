@@ -70,6 +70,7 @@ ARTICLE_URI_KEY = {
     u'gin och genever': 'sprit',
     u'armagnac och brandy': 'sprit',
     u'presentförpackningar': 'presentartiklar',
+    u'dryckestillbehör': 'presentartiklar',
     u'tillbehör': 'presentartiklar',
     u'aperitif & dessert': 'aperitif-dessert',
     u'aperitif och dessert': 'aperitif-dessert'
