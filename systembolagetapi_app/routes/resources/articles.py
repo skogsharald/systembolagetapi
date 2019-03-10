@@ -306,7 +306,8 @@ def get_article(article_number):
                 img_path = img.find('img')['src']
             except KeyError:
                 img_path = img.find('img')['data-ng-src']  # Apparently, some articles make use of AngularJS-directives
-            image_url = 'http:%s' % img_path
+            if not 'http' in image_url:
+                image_url = 'http:%s' % img_path
 
     matching_article['description'] = description
     matching_article['image_url'] = image_url
