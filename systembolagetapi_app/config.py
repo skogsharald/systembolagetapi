@@ -77,4 +77,5 @@ ARTICLE_URI_KEY = {
     u'vita - lägre alkoholhalt': 'vita-viner',
     u'rosé - lägre alkoholhalt': 'roseviner',
     u'röda - lägre alkoholhalt': 'roda-viner'
+    u'blandlådor vin':'aperitif-dessert'
 }
